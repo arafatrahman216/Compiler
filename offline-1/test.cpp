@@ -1,4 +1,5 @@
 #include"scopeTable.cpp"
+#include<algorithm>
 using namespace std;
 
 unsigned long sdbm(string str) {
@@ -55,8 +56,16 @@ unsigned long sdbm(string str) {
 // }
 
 int main() {
-    string a;
-    cin>>a;
-    cout<<sdbm(a)%7 +1<<endl;
+    string a= "   hello boxx  ";
+    // cin>>a;
+    ScopeTable scopeTable(7, sdbm);
+    scopeTable.setParentScope(nullptr);
+    scopeTable.InsertSymbol(new symbolInfo("==", "RELOP", nullptr));
+    scopeTable.InsertSymbol(new symbolInfo("foo", "STRUCT INT a FLOAT b", nullptr));
+    scopeTable.InsertSymbol(new symbolInfo("hello", "VAR", nullptr));
+    scopeTable.InsertSymbol(new symbolInfo("func", "FUNCTION INT INT FLOAT DOUBLE CHAR", nullptr));
+
+    scopeTable.LookUp("==");
+    scopeTable.test();
     return 0;
 }

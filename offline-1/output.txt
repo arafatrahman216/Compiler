@@ -1,0 +1,5 @@
+	Inserted in ScopeTable# 1 at position 2, 1
+	Inserted in ScopeTable# 1 at position 7, 1
+	Inserted in ScopeTable# 1 at position 7, 2
+	Inserted in ScopeTable# 1 at position 1, 1
+	'==' found in ScopeTable# 1 at position 2, 1

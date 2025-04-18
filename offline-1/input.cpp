@@ -16,81 +16,88 @@ int main(){
     ifstream fin(filename);
     int bucket;
     fin>>bucket;
-    cout<<bucket<<endl;
+    // fout<<bucket<<endl;
     string cmd ;
     fin>>cmd;
     string line;
+    int cmdcount = 0;
     ScopeTable sct (bucket, sdbm);
     while (cmd!="Q"){
+        cmdcount++;
         if (cmd=="I"){
             getline(fin, line); 
+             fout<<"Cmd "<<cmdcount<<": "<<cmd << line<<endl;
             stringstream ss(line);
             string name, type, extra;
-            ss >> name >> type ;
-            getline(ss, extra);
+            ss >> name ;
+            getline(ss, type);
             
             if (name.empty() || type.empty()) {
-                cout << "Error: Missing name or type in input.";
+                 fout << "\tError: Missing name or type in input.";
             } else {
-                symbolInfo *sInfo = new symbolInfo(name, type, nullptr, extra);
+                symbolInfo *sInfo = new symbolInfo(name, type, nullptr);
                 sct.InsertSymbol(sInfo);
-                // cout << "Inserted " << name << " " << type << " ,extra is " << extra <<"  ";;
+                //  fout << "Inserted " << name << " " << type << " ,extra is " << extra <<"  ";;
             }
-            // if ((ss >> extra)) {
-            //     cout << "still left !!";
-            // }
-            cout<<endl;
-            
         }
         else if (cmd=="D"){
             string name ;
-            getline(fin, name);
+            getline(fin, line);
+             fout<<"Cmd "<<cmdcount<<": "<<cmd << line<<endl;
+            stringstream ss(line);
+            ss >> name;
+            //  fout<<name<<endl;
+            //  fout<<line<<endl;
             if (name.empty()) {
-                cout<<"Error delete"<<endl;
+                 fout<<"\tNumber of parameters mismatch for the command D"<<endl;
             }
-            else cout<<" single Deleted "<<name<<endl;
+            else sct.DeleteSymbol(name);
+
             
         }
         else if (cmd=="L"){
             getline(fin, line);
+             fout<<"Cmd "<<cmdcount<<": "<<cmd << line<<endl;
             stringstream ss(line);
             string name, ext;
             ss >> name;
-            if (name.empty()) {
-                cout << "Error: Missing name in input." << endl;
+            if (name.empty() || (ss >> ext))  {
+                 fout << "\tNumber of parameters mismatch for the command L" << endl;
             } 
-            else if ((ss >> ext)) {
-                cout << "Error: Invalid input format." << endl;
-            }
             else {
-                cout << "Found " << name << endl;
+                symbolInfo* found = sct.LookUp(name);
             }
         }
         else if (cmd=="P"){
             string cmd2,ext ;
             getline(fin, line);
+             fout<<"Cmd "<<cmdcount<<": "<<cmd << line<<endl;
             stringstream ss(line);
             ss >> cmd2;
             // getline(ss, ext);
             if (cmd2.empty()) {
-                cout << "Error: Missing name in input." << endl;
+                 fout << "\tNumber of parameters mismatch for the command P" << endl;
             } 
             else if ( ! ext.empty()) {
-                cout << "Error: Invalid input format in P" << endl;
+                 fout << "\tNumber of parameters mismatch for the command L" << endl;
             }
             else {
-                cout << "Printing ScopeTable with " << cmd2 << endl;
+                 fout << "\tPrinting ScopeTable with " << cmd2 << endl;
             }
             
         }
         else if (cmd=="S"){
-            cout<<"New ScopeTable created"<<endl;
+             fout<<"Cmd "<<cmdcount<<": "<<cmd <<endl;
+             fout<<"\tScopeTable# created"<<endl;
         }
         else if (cmd=="E"){
-            cout<<"Exiting from current ScopeTable"<<endl;
+             fout<<"Cmd "<<cmdcount<<": "<<cmd <<endl;
+             fout<<"\tExiting from current ScopeTable"<<endl;
         }
         fin>>cmd;
 
     }
+     fout<<"Cmd "<<++cmdcount<<": Q"<<endl;
+    
 
 }

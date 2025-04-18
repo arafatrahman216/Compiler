@@ -1,4 +1,20 @@
 #include"symbolInfo.h"
+#include <algorithm>
+
+#include<fstream>
+fstream fout("output.txt", ios::out);
+
+string trim (string str) {
+    //  fout<<"trimming "<<str<<endl;
+    if (str.empty()) return str;
+    size_t start = str.find_first_not_of(" \t\n\r\f\v");
+    size_t end = str.find_last_not_of(" \t\n\r\f\v");
+    if (start == string::npos || end == string::npos) return "";
+    str = str.substr(start, end - start + 1);
+    //  fout<<"start "<<str <<endl;
+    return str;
+}
+
 
 class ScopeTable
 {
@@ -13,31 +29,36 @@ private:
 
 public:
     
-    ScopeTable(int bucketSize, unsigned long (*hashFunction)( string))  {
+    ScopeTable(int bucketSize, unsigned long (*hashFunction)( string) )  {
         hashtable = new symbolInfo*[bucketSize];
         this->bucketSize = bucketSize;
-        // cout<<" test 1 "<<endl;
+        //  fout<<" test 1 "<<endl;
         for (int i = 0; i < bucketSize; i++) {
             hashtable[i] = NULL;
         }
-        // cout<<" test 2 "<<endl;
+        //  fout<<" test 2 "<<endl;
         // scopeCount = 0;
         sid = ++idCount;
         parentScope = nullptr;
         this->hashFunction = hashFunction ;
+        cout<< "ScopeTable# " << sid << " created" << endl;
+    }
+
+    ScopeTable( ScopeTable* parent){
+
     }
 
     ~ScopeTable() {
         for (int i = 0; i < bucketSize; i++) {
             if (hashtable[i] != NULL) {
                 symbolInfo* temp = hashtable[i];
-                // cout << " test * " << bucketSize<< endl;
+                //  fout << " test * " << bucketSize<< endl;
                 while (temp != NULL) {
                     symbolInfo* toDelete = temp;
                     temp = temp->getNextSymbol();
-                    // cout << " test 3 " << endl;
+                    //  fout << " test 3 " << endl;
                     delete toDelete; // Deleting the current node
-                    // cout << " test 4 " << endl;
+                    //  fout << " test 4 " << endl;
                 }
             }
         }
@@ -64,71 +85,143 @@ public:
     // int getScopeCount() {
     //     return scopeCount;
     // }
-
-    bool InsertSymbol(symbolInfo *sInfo) {
-        unsigned long index = getHash(sInfo->getName());    
-        int position = 1;
-        int i = 1;
-        if (hashtable[index] == nullptr) { 
-            hashtable[index] = sInfo;
-            cout << sInfo->getName() << " Inserted in ScopeTable# " << sid << " at position " << index+1<< ", "<<position;
-            // scopeCount++;
-            return true;
-        } else if (getLookUp(sInfo->getName(),i ) == nullptr) {
-            symbolInfo* temp = hashtable[index];
-            while (temp->getNextSymbol() != nullptr) {
-                temp = temp->getNextSymbol();
-                // cout << " test 5 " << endl;
-                position++;
-            }
-            temp->setNextSymbol(sInfo);
-            // scopeCount++;
-            //inserted in ScopeTable# 5 at position 7, 3
-            cout<< sInfo->getName() << " Inserted in ScopeTable# " << sid << " at position " << index+1 << ", " << position ;
-            return true;
-        } else {
-            cout << "Error: Symbol already exists in the current ScopeTable." << endl;
-            return false;
-        }
-    }
-
-    unsigned long getHash(string str){
-        return hashFunction(str) % bucketSize;
-    }
     
     symbolInfo * getLookUp ( string name, int &position){
+        name = trim(name);
         unsigned long index = getHash(name);
         symbolInfo * hashPointer = hashtable[index];
         while ( hashPointer!= nullptr){
             if (hashPointer->getName() == name){
-                // cout << "\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
+                //  fout << "\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
                 return hashPointer;
             }
             hashPointer = hashPointer->getNextSymbol();
             position++;
         }
-        // cout<<"\'"<<name<<"\' not found in any of the ScopeTables";
+        //  fout<<"\'"<<name<<"\' not found in any of the ScopeTables";
         return nullptr;
     }
 
-    symbolInfo * LookUp(string name) {
+    unsigned long getHash(string str){
+        str = trim(str);
+        return hashFunction(str) % bucketSize;
+    }
+
+    bool InsertSymbol(symbolInfo *sInfo) {
+        sInfo->setName(trim(sInfo->getName()));
+        unsigned long index = getHash(sInfo->getName());    
         int position = 1;
-        unsigned long index = getHash(name)+1 ;
-        symbolInfo* hashPointer = getLookUp(name, position);
-        if (hashPointer != nullptr) {
-            cout << "\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
-            return hashPointer;
-        } else {
-            cout << "\'" << name << "\' not found in any of the ScopeTables" << endl;
-            return nullptr;
-            
+        int i = 1;
+        symbolInfo* found = getLookUp(sInfo->getName(), i);
+        //  fout << found << endl;
+        if (found == nullptr){
+            symbolInfo* temp = hashtable[index];
+            if (hashtable[index] == nullptr) { 
+                hashtable[index] = sInfo;
+                //  fout << " test 5 " << endl;
+                 fout <<"\tInserted in ScopeTable# " << sid << " at position " << index+1<< ", "<<position<<endl;
+                // scopeCount++;
+                return true;   
+            }  
+            //  fout<<temp<<endl;
+            position++;
+            while (temp->getNextSymbol() != nullptr) {
+                temp = temp->getNextSymbol();
+                position++;
+            }
+            temp->setNextSymbol(sInfo);
+            // scopeCount++;
+            //inserted in ScopeTable# 5 at position 7, 3
+             fout<< "\tInserted in ScopeTable# " << sid << " at position " << index+1 << ", " << position <<endl;
+            return true;
+        }       
+        else {
+             fout<< "\t\'" << sInfo->getName() << "\'"<< " already exists in the current ScopeTable" << endl;
+            return false;
         }
     }
 
+    
 
+    symbolInfo * LookUp(string name) {
+        int position = 1;
+        name = trim(name);
+        unsigned long index = getHash(name)+1 ;
+        symbolInfo* hashPointer = getLookUp(name, position);
+        if (hashPointer != nullptr) {
+             fout << "\t\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
+            return hashPointer;
+        } else {
+             fout << "\t\'" << name << "\' not found in any of the ScopeTables" << endl;
+            return nullptr;
+        }
+    }
 
+    bool DeleteSymbol(string name) {
+        int i=1;
+        name = trim(name);
+        unsigned long index = getHash(name);
+        if (getLookUp(name, i) == nullptr) {
+             fout << "\tNot found in the current ScopeTable"<<endl;
+            return false;
+        }
+        int position = 1;
+        symbolInfo* curr = hashtable[index];
+        symbolInfo* prev = nullptr;
+        while( curr!= nullptr){
+            if (curr->getName() == name){
+                if (prev == nullptr) {
+                    hashtable[index] = curr->getNextSymbol();
+                } else {
+                    prev->setNextSymbol(curr->getNextSymbol());
+                }
+                delete curr;
+                 fout << "\tDeleted \'" << name << "\' from ScopeTable# " << sid << " at position " << index+1 << ", " << position << endl;
+                return true;
+            }
+            prev = curr;
+            curr = curr->getNextSymbol();
+            position++;
+        }
+        return false;
+    }
 
+    unsigned long (*getHashFunction())(string) {
+        return hashFunction;
+    }
 
+    void PrintScopeTable(){
+        cout << "ScopeTable# " << sid << endl;
+        for (int i = 0; i < bucketSize; i++) {
+            if (hashtable[i] != nullptr) {
+                cout << i+1 << " --> ";
+                symbolInfo* temp = hashtable[i];
+                while (temp != nullptr) {
+                    cout << "<" << temp->getName() << " : " << temp->getType() << "> ";
+                    temp = temp->getNextSymbol();
+                }
+                cout << endl;
+            }
+        }
+    }
+
+    void test(){
+        cout<<"ScopeTable# " << sid << endl;
+        for (int i = 0; i < bucketSize; i++) {
+            // if (hashtable[i] != nullptr) {
+                cout << i+1 << " --> ";
+                symbolInfo* temp = hashtable[i];
+                while (temp != nullptr) {
+                    temp->PrintSymbolInfo();
+                    cout<<" ";
+                    temp = temp->getNextSymbol();
+                }
+                cout << endl;
+            // }
+        }
+    }
 };
 
+
 int ScopeTable::idCount= 0; // Initialize static member variable
+
