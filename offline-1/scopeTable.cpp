@@ -1,9 +1,6 @@
 #include"symbolInfo.h"
 #include <algorithm>
 
-#include<fstream>
-fstream fout("output.txt", ios::out);
-
 string trim (string str) {
     //  fout<<"trimming "<<str<<endl;
     if (str.empty()) return str;
@@ -22,42 +19,55 @@ private:
     static int idCount ;
     int sid ; // static variable to keep track of scope table id
     int bucketSize ;
-    // int scopeCount ;
+    int collissionCount ;
     unsigned long (*hashFunction)(string); // function pointer
     symbolInfo** hashtable; // hashtable of symbolInfo
     ScopeTable* parentScope ; // pointer to parent scope, to be used as a stack
 
 public:
     
-    ScopeTable(int bucketSize, unsigned long (*hashFunction)( string) )  {
+    ScopeTable(int bucketSize, unsigned long (*hashFunction)( string))  {
         hashtable = new symbolInfo*[bucketSize];
         this->bucketSize = bucketSize;
-        //  fout<<" test 1 "<<endl;
         for (int i = 0; i < bucketSize; i++) {
             hashtable[i] = NULL;
         }
-        //  fout<<" test 2 "<<endl;
-        // scopeCount = 0;
         sid = ++idCount;
+        collissionCount = 0;
         parentScope = nullptr;
         this->hashFunction = hashFunction ;
-        cout<< "ScopeTable# " << sid << " created" << endl;
+        fout<< "\tScopeTable# " << sid << " created" << endl;
+    }
+
+    static void initializeIDCount() {
+        idCount = 0;
     }
 
     ScopeTable( ScopeTable* parent){
-
+        this->parentScope = parent;
+        this->bucketSize = parent->bucketSize;
+        this->hashFunction = parent->hashFunction;
+        this->sid = ++idCount;
+        hashtable = new symbolInfo*[bucketSize];
+        collissionCount = 0;
+        for (int i = 0; i < bucketSize; i++) {
+            hashtable[i] = NULL;
+        }
+        // scopeCount = 0;
+        fout<< "\tScopeTable# " << sid << " created" << endl;
     }
 
     ~ScopeTable() {
+
         for (int i = 0; i < bucketSize; i++) {
             if (hashtable[i] != NULL) {
                 symbolInfo* temp = hashtable[i];
                 //  fout << " test * " << bucketSize<< endl;
                 while (temp != NULL) {
-                    symbolInfo* toDelete = temp;
+                    symbolInfo* trash = temp;
                     temp = temp->getNextSymbol();
                     //  fout << " test 3 " << endl;
-                    delete toDelete; // Deleting the current node
+                    delete trash; // Deleting the current node
                     //  fout << " test 4 " << endl;
                 }
             }
@@ -108,7 +118,14 @@ public:
     }
 
     bool InsertSymbol(symbolInfo *sInfo) {
+        // if name or type is empty or contains only spaces 
+        if (sInfo->getName().empty() || sInfo->getType().empty() || sInfo->getName() == " " || sInfo->getType() == " ") {
+            // fout<< sInfo->getName() << " " << sInfo->getType() << endl;
+            fout << "\tError: Missing name or type in input."<<endl;
+            return false;
+        } 
         sInfo->setName(trim(sInfo->getName()));
+        // cout<<"test -"<<sInfo->getName()<<"-"<<endl;
         unsigned long index = getHash(sInfo->getName());    
         int position = 1;
         int i = 1;
@@ -123,6 +140,7 @@ public:
                 // scopeCount++;
                 return true;   
             }  
+            collissionCount++;
             //  fout<<temp<<endl;
             position++;
             while (temp->getNextSymbol() != nullptr) {
@@ -136,7 +154,8 @@ public:
             return true;
         }       
         else {
-             fout<< "\t\'" << sInfo->getName() << "\'"<< " already exists in the current ScopeTable" << endl;
+            fout<< "\t\'" << sInfo->getName() << "\'"<< " already exists in the current ScopeTable" << endl;
+            delete sInfo;
             return false;
         }
     }
@@ -146,19 +165,22 @@ public:
     symbolInfo * LookUp(string name) {
         int position = 1;
         name = trim(name);
-        unsigned long index = getHash(name)+1 ;
+        unsigned long index = getHash(name) +1 ;
         symbolInfo* hashPointer = getLookUp(name, position);
         if (hashPointer != nullptr) {
-             fout << "\t\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
+            fout << "\t\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
             return hashPointer;
         } else {
-             fout << "\t\'" << name << "\' not found in any of the ScopeTables" << endl;
             return nullptr;
         }
     }
 
     bool DeleteSymbol(string name) {
         int i=1;
+        if (name.empty()) {
+            fout<<"\tNumber of parameters mismatch for the command D"<<endl;
+            return false;
+        }
         name = trim(name);
         unsigned long index = getHash(name);
         if (getLookUp(name, i) == nullptr) {
@@ -190,36 +212,28 @@ public:
         return hashFunction;
     }
 
-    void PrintScopeTable(){
-        cout << "ScopeTable# " << sid << endl;
-        for (int i = 0; i < bucketSize; i++) {
-            if (hashtable[i] != nullptr) {
-                cout << i+1 << " --> ";
-                symbolInfo* temp = hashtable[i];
-                while (temp != nullptr) {
-                    cout << "<" << temp->getName() << " : " << temp->getType() << "> ";
-                    temp = temp->getNextSymbol();
-                }
-                cout << endl;
-            }
-        }
-    }
-
-    void test(){
-        cout<<"ScopeTable# " << sid << endl;
+    void PrintScopeTable(string tabs= "\t") {
+        fout<<tabs << "ScopeTable# " << sid << endl;
+        // cout<<tabs << "ScopeTable# " << sid << endl;
         for (int i = 0; i < bucketSize; i++) {
             // if (hashtable[i] != nullptr) {
-                cout << i+1 << " --> ";
+                fout<< tabs << i+1 << "--> ";
+                // cout<< tabs << i+1 << "--> ";
                 symbolInfo* temp = hashtable[i];
                 while (temp != nullptr) {
                     temp->PrintSymbolInfo();
-                    cout<<" ";
                     temp = temp->getNextSymbol();
                 }
-                cout << endl;
+                fout << endl;
+                // cout << endl;
             // }
         }
     }
+
+    int getCollissionCount() {
+        return collissionCount;
+    }
+
 };
 
 

@@ -1,7 +1,12 @@
 #include<iostream>
 #include <string>
 #include <sstream>
+#include<fstream>
+
 using namespace std;
+
+// fstream fout("output.txt", ios::out);
+extern fstream fout;
 
 
 
@@ -66,46 +71,57 @@ public:
     }
 
     void PrintSymbolInfo(){
-        cout << "<" << NAME << ",";
+        fout << "<" << NAME << ",";
+        //cout << "<" << NAME << ",";
         stringstream ss(TYPE);
         string type;
         ss >> type;
 
         if (type == "INT" || type == "FLOAT" || type == "CHAR" || type == "DOUBLE" 
-                    ||type == "VAR"  || type == "NUMBER" || type == "RELOP" || type == "BOOL" ) 
+                    ||type == "VAR"  || type == "NUMBER" || type == "RELOP" || type == "BOOL"  || type=="STRING") 
         {
-            cout << type<<">";
+            fout << type<<"> ";
+            //cout << type<<"> ";
         } 
         else if (type == "FUNCTION" ){
-            cout << "FUNCTION," ;
+            fout << "FUNCTION," ;
+            //cout << "FUNCTION," ;
             string returnType, argType;
             ss >> returnType;
-            cout << returnType << "<==(" ;
+            fout << returnType << "<==(" ;
+            //cout << returnType << "<==(" ;
             while (ss >> argType) {
-                cout << argType ;
+                fout << argType ;
+                //cout << argType ;
                 if (ss.peek() != EOF ) {
-                    cout << ",";
+                    fout << ",";
+                    //cout << ",";
                     ss.ignore();
                 }
 
             }
-            cout << ")>" ;
+            fout << ")> " ;
+            //cout << ")> " ;
         }
         else if (type == "STRUCT" || type == "UNION"){
-            cout << "STRUCT,{" ;
+            fout << "STRUCT,{" ;
+            //cout << "STRUCT,{" ;
             string retType, varName;
             while ( ss >> retType && ss >> varName) {
-                cout <<"("<< retType << "," << varName <<")" ;
+                fout <<"("<< retType << "," << varName <<")" ;
+                //cout <<"("<< retType << "," << varName <<")" ;
                 if (ss.peek() != EOF ) {
-                    cout << ",";
+                    fout << ",";
                     ss.ignore();
                 }
             }
-            cout << "}>" ;
+            fout << "}> " ;
+            //cout << "}> " ;
         }
         else 
         {
-            cout << "ERROR: Unknown type" ;
+            fout << "ERROR: Unknown type" ;
+            //cout << "ERROR: Unknown type" ;
         }
     }
 

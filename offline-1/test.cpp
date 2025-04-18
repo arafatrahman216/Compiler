@@ -1,4 +1,4 @@
-#include"scopeTable.cpp"
+#include"symbolTable.cpp"
 #include<algorithm>
 using namespace std;
 
@@ -58,14 +58,22 @@ unsigned long sdbm(string str) {
 int main() {
     string a= "   hello boxx  ";
     // cin>>a;
-    ScopeTable scopeTable(7, sdbm);
-    scopeTable.setParentScope(nullptr);
-    scopeTable.InsertSymbol(new symbolInfo("==", "RELOP", nullptr));
-    scopeTable.InsertSymbol(new symbolInfo("foo", "STRUCT INT a FLOAT b", nullptr));
-    scopeTable.InsertSymbol(new symbolInfo("hello", "VAR", nullptr));
-    scopeTable.InsertSymbol(new symbolInfo("func", "FUNCTION INT INT FLOAT DOUBLE CHAR", nullptr));
+    SymbolTable symbolTable(7, sdbm);
+    symbolTable.EnterScope();
+    symbolTable.Insert("x", "INT");
+    symbolTable.Insert("y", "FLOAT");
+    symbolTable.Insert("z", "STRING");
+    symbolTable.Insert("r", "STRING");
+    symbolTable.Insert("t", "STRING");
+    symbolTable.Insert("c", "FUNCTION INT INT STRING");
+    // symbolTable.PrintCurrentScopeTable();
+    symbolTable.EnterScope();
+    symbolTable.Insert("a", "INT");
+    symbolTable.Insert("b", "FLOAT");
+    symbolTable.Insert("c", "FUNCTION INT INT STRING");
+    // symbolTable.PrintCurrentScopeTable();
+    symbolTable.PrintAllScopeTable();
 
-    scopeTable.LookUp("==");
-    scopeTable.test();
+    
     return 0;
 }
