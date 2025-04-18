@@ -62,22 +62,18 @@ public:
         for (int i = 0; i < bucketSize; i++) {
             if (hashtable[i] != NULL) {
                 symbolInfo* temp = hashtable[i];
-                //  fout << " test * " << bucketSize<< endl;
                 while (temp != NULL) {
                     symbolInfo* trash = temp;
                     temp = temp->getNextSymbol();
-                    //  fout << " test 3 " << endl;
-                    delete trash; // Deleting the current node
-                    //  fout << " test 4 " << endl;
+                    delete trash; 
                 }
             }
         }
-        delete[] hashtable; // Deleting the array of pointers (hashtable)
+        delete[] hashtable; 
     }
 
     void setParentScope(ScopeTable* parent) {
         parentScope = parent;
-        // if (parent != nullptr) parent->scopeCount++;
     }
 
     ScopeTable* getParentScope() {
@@ -92,9 +88,6 @@ public:
         return bucketSize;
     }
 
-    // int getScopeCount() {
-    //     return scopeCount;
-    // }
     
     symbolInfo * getLookUp ( string name, int &position){
         name = trim(name);
@@ -102,13 +95,11 @@ public:
         symbolInfo * hashPointer = hashtable[index];
         while ( hashPointer!= nullptr){
             if (hashPointer->getName() == name){
-                //  fout << "\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
                 return hashPointer;
             }
             hashPointer = hashPointer->getNextSymbol();
             position++;
         }
-        //  fout<<"\'"<<name<<"\' not found in any of the ScopeTables";
         return nullptr;
     }
 
@@ -120,12 +111,10 @@ public:
     bool InsertSymbol(symbolInfo *sInfo) {
         // if name or type is empty or contains only spaces 
         if (sInfo->getName().empty() || sInfo->getType().empty() || sInfo->getName() == " " || sInfo->getType() == " ") {
-            // fout<< sInfo->getName() << " " << sInfo->getType() << endl;
             fout << "\tError: Missing name or type in input."<<endl;
             return false;
         } 
         sInfo->setName(trim(sInfo->getName()));
-        // cout<<"test -"<<sInfo->getName()<<"-"<<endl;
         unsigned long index = getHash(sInfo->getName());    
         int position = 1;
         int i = 1;
