@@ -4,6 +4,7 @@
 #include <cmath>
 
 fstream report;
+fstream fout;
 
 int main(int argc, char *argv[]) {
 
@@ -19,6 +20,7 @@ int main(int argc, char *argv[]) {
     cout << "Output file: " << outfile << endl;
     ifstream fin(infile);
     report.open(outfile, ios::out);
+    fout.open("garbage.txt", ios::out);
     if (!report ||!fin) {
         cout << "Error opening input or output file." << endl;
         return 1;
@@ -42,10 +44,12 @@ int main(int argc, char *argv[]) {
             string name, type, extra;
             ss >> name;
             getline(ss, type);
-            symbolInfo *sInfo = new symbolInfo(name, type, nullptr);
-            for (int i = 0; i < 3; i++) {
-                starray[i].Insert(sInfo);
-            }
+            symbolInfo *sInfo1 = new symbolInfo(name, type, nullptr);
+            symbolInfo *sInfo2 = new symbolInfo(name, type, nullptr);
+            symbolInfo *sInfo3 = new symbolInfo(name, type, nullptr);
+            starray[0].Insert(sInfo1);
+            starray[1].Insert(sInfo2);
+            starray[2].Insert(sInfo3);
         } else if (cmd == "D") {
             string name;
             getline(fin, line);
@@ -58,24 +62,38 @@ int main(int argc, char *argv[]) {
         } else if (cmd == "L") {
             string name;
             getline(fin, line);
-            report << "Cmd " << cmdcount << ": " << cmd << line << endl;
+            fout << "Cmd " << cmdcount << ": " << cmd << line << endl;
             stringstream ss(line);
             ss >> name;
-            for (int i = 0; i < 3; i++) {
-                starray[i].LookUp(name);
-            }
+            symbolInfo *sInfo1 = starray[0].LookUp(name);
+            symbolInfo *sInfo2 = starray[1].LookUp(name);
+            symbolInfo *sInfo3 = starray[2].LookUp(name);
         } else if (cmd == "P") {
-            report<<endl<<"Cmd "<<cmdcount<<": "<<cmd<<endl;
-            for (int i = 0; i < 3; i++) {
-                report<<endl<<"ScopeTable# "<<i+1<<endl;
-                starray[i].PrintCurrentScopeTable();
-                report<<endl;
+            string cmd2, ext;
+            getline(fin, line);
+            fout << "Cmd " << cmdcount << ": " << cmd << line << endl;
+            stringstream ss(line);
+
+            if (!cmd2.empty()) {
+                ss >> cmd2;
             }
+
         } else if (cmd == "E") {
             report<<endl<<"Cmd "<<cmdcount<<": "<<cmd<<endl;
-        } else {
-            report<<"Invalid command"<<endl;
+            for (int i = 0; i < 3; i++) {
+                starray[i].ExitScope();   
+            }
         }
+        else if (cmd == "S") {
+            for (int i = 0; i < 3; i++) {
+                starray[i].EnterScope();
+            }
+        }
+        else {
+            cout<<"Invalid command"<<endl;
+        }
+        cmdcount++;
+        fin>>cmd;
+
     }
-        
-}
+}       

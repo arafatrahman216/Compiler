@@ -1,10 +1,138 @@
-	ScopeTable# 1 created
-	ScopeTable# 2 created
-	ScopeTable# 1 created
-	ScopeTable# 2 created
-	ScopeTable# 1 created
-	ScopeTable# 1 removed
-	ScopeTable# 2 removed
-	ScopeTable# 1 removed
-	ScopeTable# 2 removed
-	ScopeTable# 1 removed
+Cmd 0: I foo FUNCTION INT INT FLOAT INT
+Cmd 1: I i VAR
+Cmd 2: L i
+Cmd 3: L i j
+Cmd 4: L j
+Cmd 6: I 23 NUMBER
+Cmd 7: I car STRUCT INT n_doors BOOL is_electric STRING brand
+Cmd 8: I brand VAR 
+
+Cmd 9: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 11: D i
+Cmd 12: D j
+
+Cmd 13: E
+
+Cmd 15: E
+
+Cmd 17: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 20: I <= RELOP
+Cmd 21: I == RELOP
+
+Cmd 22: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 24: I >= RELOP
+
+Cmd 25: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 27: I <= RELOP
+Cmd 28: I foo STRUCT INT a FLOAT b
+
+Cmd 29: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 31: D ==
+Cmd 32: I foo VAR
+Cmd 33: D 23
+Cmd 34: D
+
+Cmd 35: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 37: L 23
+Cmd 39: I x VAR
+Cmd 40: I y VAR
+
+Cmd 41: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+Cmd 43: L foo
+
+Cmd 44: E
+Cmd 45: I num VAR
+Cmd 46: I bicycle UNION INT n_gears BOOL is_hydrolic_brake STRING brand
+Cmd 48: I true BOOL
+Cmd 49: L a
+
+Cmd 50: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+
+
+Cmd 52: E
+
+Cmd 53: E
+
+Cmd 54: E
+
+Cmd 56: P
+
+ScopeTable# 1
+
+
+ScopeTable# 2
+
+
+ScopeTable# 3
+

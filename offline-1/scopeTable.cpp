@@ -222,6 +222,10 @@ public:
     int getCollissionCount() {
         return collissionCount;
     }
+    
+    static void setIdCount(int id) {
+        idCount = id;
+    }
 
 };
 

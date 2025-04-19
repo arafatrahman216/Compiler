@@ -4,16 +4,20 @@ class SymbolTable{
     private :
         ScopeTable *scopeTable ;
         int collisionCount ;
+        int scopeCount ;
     public :
         SymbolTable(int bucketSize, unsigned long (*hashFunction)( string)){
             ScopeTable::initializeIDCount();
             collisionCount = 0;
+            scopeCount = 0;
             scopeTable = new ScopeTable(bucketSize, hashFunction);
 
             
         }
 
         void EnterScope(){
+            scopeCount++;
+            ScopeTable::setIdCount(scopeCount);
             ScopeTable *newScope = new ScopeTable(scopeTable->getBucketSize(), scopeTable->getHashFunction());
             newScope->setParentScope(scopeTable);
             scopeTable = newScope;
