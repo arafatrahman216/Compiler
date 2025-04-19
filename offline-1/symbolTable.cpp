@@ -80,7 +80,16 @@ class SymbolTable{
             while (scopeTable != nullptr) {
                 ExitScope();
             }
-            cout<< "Total Collisions: " << collisionCount << endl;
+            // cout<< "Total Collisions: " << collisionCount << endl;
+        }
+
+        int getCollisionCount() {
+            ScopeTable *temp = scopeTable;
+            while (temp != nullptr) {
+                collisionCount += temp->getCollissionCount();
+                temp = temp->getParentScope();
+            }
+            return collisionCount;
         }
         
 };

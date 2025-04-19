@@ -2,6 +2,7 @@
 #include<fstream>
 #include <sstream>
 #include <cmath>
+#include <iomanip> 
 
 fstream report;
 fstream fout;
@@ -34,12 +35,11 @@ int main(int argc, char *argv[]) {
     SymbolTable st (bucket, sdbm);
     SymbolTable st2 (bucket, djb2);
     SymbolTable st3 (bucket, jenkins);
-    SymbolTable starray[3] = {st, st2, st3};
+    // SymbolTable starray[3] = {st, st2, st3};
     // st, cmd,line,cmdcount, fin,fout
     while (cmd != "Q") {
         if (cmd == "I") {
             getline(fin, line);
-            report << "Cmd " << cmdcount << ": " << cmd << line << endl;
             stringstream ss(line);
             string name, type, extra;
             ss >> name;
@@ -47,47 +47,55 @@ int main(int argc, char *argv[]) {
             symbolInfo *sInfo1 = new symbolInfo(name, type, nullptr);
             symbolInfo *sInfo2 = new symbolInfo(name, type, nullptr);
             symbolInfo *sInfo3 = new symbolInfo(name, type, nullptr);
-            starray[0].Insert(sInfo1);
-            starray[1].Insert(sInfo2);
-            starray[2].Insert(sInfo3);
+            st.Insert(sInfo1);
+            st2.Insert(sInfo2);
+            st3.Insert(sInfo3);
         } else if (cmd == "D") {
             string name;
             getline(fin, line);
-            report << "Cmd " << cmdcount << ": " << cmd << line << endl;
             stringstream ss(line);
             ss >> name;
-            for (int i = 0; i < 3; i++) {
-                starray[i].Remove(name);
-            }
+            st.Remove(name);
+            st2.Remove(name);
+            st3.Remove(name);
         } else if (cmd == "L") {
             string name;
             getline(fin, line);
             fout << "Cmd " << cmdcount << ": " << cmd << line << endl;
             stringstream ss(line);
             ss >> name;
-            symbolInfo *sInfo1 = starray[0].LookUp(name);
-            symbolInfo *sInfo2 = starray[1].LookUp(name);
-            symbolInfo *sInfo3 = starray[2].LookUp(name);
+            symbolInfo *sInfo1 = st.LookUp(name);
+            symbolInfo *sInfo2 = st2.LookUp(name);
+            symbolInfo *sInfo3 = st3.LookUp(name);
         } else if (cmd == "P") {
             string cmd2, ext;
             getline(fin, line);
-            fout << "Cmd " << cmdcount << ": " << cmd << line << endl;
             stringstream ss(line);
-
-            if (!cmd2.empty()) {
-                ss >> cmd2;
+            ss >> cmd2 >>ext;
+            if (cmd2.empty()) {
+                fout << "\tNumber of parameters mismatch for the command P" << endl;
+            } else if (!ext.empty()) {
+                fout << "\tNumber of parameters mismatch for the command P" << endl;
+            } else if (cmd2 == "C") {
+                st.PrintCurrentScopeTable();
+            } else if (cmd2 == "A") {
+                st.PrintAllScopeTable();
+            } else {
+                fout << "\tInvalid command" << endl;
             }
+
+
 
         } else if (cmd == "E") {
-            report<<endl<<"Cmd "<<cmdcount<<": "<<cmd<<endl;
-            for (int i = 0; i < 3; i++) {
-                starray[i].ExitScope();   
-            }
+            st.ExitScope();
+            st2.ExitScope();
+            st3.ExitScope();
         }
         else if (cmd == "S") {
-            for (int i = 0; i < 3; i++) {
-                starray[i].EnterScope();
-            }
+            st.EnterScope();
+            st2.EnterScope();
+            st3.EnterScope();
+
         }
         else {
             cout<<"Invalid command"<<endl;
@@ -95,5 +103,34 @@ int main(int argc, char *argv[]) {
         cmdcount++;
         fin>>cmd;
 
+
     }
+    report << left << setw(20) << "Hash Function"
+        << setw(20) << "Collision Count"
+        << setw(30) << "Collision/Bucket Size" << endl;
+
+    report << string(70, '-') << endl; // Separator line
+
+    report << left << setw(20) << "sdbm"
+        << setw(20) << st.getCollisionCount()
+        << setw(30) << fixed << setprecision(6) << (float)st.getCollisionCount()/bucket << endl;
+
+    report << left << setw(20) << "djb2"
+        << setw(20) << st2.getCollisionCount()
+        << setw(30) << fixed << setprecision(6) << (float)st2.getCollisionCount()/bucket << endl;
+
+    report << left << setw(20) << "jenkins"
+        << setw(20) << st3.getCollisionCount()
+        << setw(30) << fixed << setprecision(6) << (float)st3.getCollisionCount()/bucket << endl;
+
+    report << endl;
+    report << "Mean Ratio of Collisions to Bucket Size: "
+        << fixed << setprecision(6)
+        << (float)(st.getCollisionCount() + st2.getCollisionCount() + st3.getCollisionCount()) / (3 * bucket)
+        << endl;
+
+    report.close();
+    fout.close();
+    fin.close();
+    
 }       
