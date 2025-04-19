@@ -1,4 +1,4 @@
-#include"symbolInfo.h"
+#include"2105118_symbolInfo.h"
 #include <algorithm>
 
 string trim (string str) {

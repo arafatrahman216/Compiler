@@ -105,28 +105,30 @@ int main(int argc, char *argv[]) {
 
 
     }
-    report << left << setw(20) << "Hash Function"
-        << setw(20) << "Collision Count"
-        << setw(30) << "Collision/Bucket Size" << endl;
+    report <<left <<setw(20)<<  "Hash Function"<< setw(20)<< "Collision Count" << setw(30) <<
+    "Collision/Bucket Size" << endl;
 
-    report << string(70, '-') << endl; // Separator line
-
-    report << left << setw(20) << "sdbm"
-        << setw(20) << st.getCollisionCount()
+    report << string(70, '_') << endl;
+    report << left << setw(20) << "sdbm" << setw(20) << st.getCollisionCount()
         << setw(30) << fixed << setprecision(6) << (float)st.getCollisionCount()/bucket << endl;
 
     report << left << setw(20) << "djb2"
-        << setw(20) << st2.getCollisionCount()
-        << setw(30) << fixed << setprecision(6) << (float)st2.getCollisionCount()/bucket << endl;
+        
+    << setw(20) << st2.getCollisionCount() << setw(30) << fixed << setprecision(6) 
+        << (float)st2.getCollisionCount()/bucket << endl;
 
     report << left << setw(20) << "jenkins"
         << setw(20) << st3.getCollisionCount()
         << setw(30) << fixed << setprecision(6) << (float)st3.getCollisionCount()/bucket << endl;
 
+    int totalColl = st.getCollisionCount() + st2.getCollisionCount() + st3.getCollisionCount();
+
     report << endl;
+    report << "Total Collisions: " << totalColl << endl;
+    report << "Bucket Size: " << bucket << endl;
     report << "Mean Ratio of Collisions to Bucket Size: "
         << fixed << setprecision(6)
-        << (float)(st.getCollisionCount() + st2.getCollisionCount() + st3.getCollisionCount()) / (3 * bucket)
+        << (float)totalColl / (3 * bucket)
         << endl;
 
     report.close();
