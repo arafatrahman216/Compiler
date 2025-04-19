@@ -2,22 +2,23 @@
 #include <string>
 #include <sstream>
 #include<fstream>
+#include<cmath>
 #include "2105118_symbolTable.cpp"
 
 
 // source : offline spec
-unsigned long sdbm(string str) {
-    unsigned long hash = 0;
+unsigned long long sdbm(string str) {
+    unsigned long long hash = 0;
     for (char c : str) {
-        hash = c + (hash << 6) + (hash << 16) - hash;
+        hash = (c + (hash << 6) + (hash << 16) - hash);
     }
-    return hash;
+    return llabs(hash);
 }
 
 
 // source : https://stackoverflow.com/questions/7666509/how-to-hash-a-string-in-c
-unsigned long djb2(string str) {
-    unsigned long hash = 5381;
+unsigned long long djb2(string str) {
+    unsigned long long hash = 5381;
     for (char c : str) {
         hash = ((hash << 5) + hash) + c; 
     }
@@ -25,8 +26,8 @@ unsigned long djb2(string str) {
 }
 
 // source : https://stackoverflow.com/questions/7666509/how-to-hash-a-string-in-c(same as above)
-unsigned long jenkins(string str) {
-    unsigned long hash = 0;
+unsigned long long jenkins(string str) {
+    unsigned long long hash = 0;
     for (char c : str) {
         hash += c;
         hash += (hash << 10);

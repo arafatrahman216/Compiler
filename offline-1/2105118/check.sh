@@ -6,10 +6,10 @@
 # ./2105118 1 sample_input.txt out.txt
 
 g++ -fsanitize=address -g 2105118_report_generator.cpp -o 2105118_report
-./2105118_report sample_input.txt
+./2105118_report ../sample_input.txt
 rm garbage.txt
 rm 2105118_report
 
 g++ -fsanitize=address -g 2105118.cpp -o 2105118
-./2105118 1 sample_input.txt out.txt
+./2105118 0 ../sample_input.txt out.txt
 rm 2105118

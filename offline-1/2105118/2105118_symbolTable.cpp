@@ -6,7 +6,7 @@ class SymbolTable{
         int collisionCount ;
         int scopeCount ;
     public :
-        SymbolTable(int bucketSize, unsigned long (*hashFunction)( string)){
+        SymbolTable(int bucketSize, unsigned long long(*hashFunction)( string)){
             ScopeTable::initializeIDCount();
             collisionCount = 0;
             scopeCount = 0;
@@ -93,7 +93,7 @@ class SymbolTable{
         }
 
         int getScopeCount() {
-            return scopeCount;
+            return scopeCount+1;
         }
         
 };
