@@ -91,5 +91,9 @@ class SymbolTable{
             }
             return collisionCount;
         }
+
+        int getScopeCount() {
+            return scopeCount;
+        }
         
 };

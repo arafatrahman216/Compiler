@@ -1,9 +1,0 @@
-Hash Function       Collision Count     Collision/Bucket Size         
-______________________________________________________________________
-sdbm                4                   0.571429                      
-djb2                1                   0.142857                      
-jenkins             2                   0.285714                      
-
-Total Collisions: 7
-Bucket Size: 7
-Mean Ratio of Collisions to Bucket Size: 0.333333
