@@ -23,7 +23,11 @@ class SymbolTable{
             scopeTable = newScope;
         }
 
-        void ExitScope(){
+        void ExitScope(bool removeScopeStack = false){
+            if ( !removeScopeStack && scopeTable->getParentScope() == nullptr) {
+                fout << "\tNo more scopes to exit" << endl;
+                return;
+            }
             ScopeTable *temp = scopeTable;
             scopeTable = scopeTable->getParentScope();
             fout<< "\tScopeTable# " << temp->getId() << " removed" << endl;
@@ -77,9 +81,11 @@ class SymbolTable{
         }
 
         ~SymbolTable(){
-            while (scopeTable != nullptr) {
+            while (scopeTable->getParentScope() != nullptr) {
                 ExitScope();
             }
+            ExitScope(true);
+            
             // cout<< "Total Collisions: " << collisionCount << endl;
         }
 
