@@ -104,7 +104,7 @@ public:
             //cout << ")> " ;
         }
         else if (type == "STRUCT" || type == "UNION"){
-            fout << "STRUCT,{" ;
+            fout << type<<",{" ;
             //cout << "STRUCT,{" ;
             string retType, varName;
             while ( ss >> retType && ss >> varName) {

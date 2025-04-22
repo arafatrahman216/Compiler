@@ -78,8 +78,12 @@ int main(int argc, char *argv[]) {
                 fout << "\tNumber of parameters mismatch for the command P" << endl;
             } else if (cmd2 == "C") {
                 st.PrintCurrentScopeTable();
+                st2.PrintCurrentScopeTable();
+                st3.PrintCurrentScopeTable();
             } else if (cmd2 == "A") {
                 st.PrintAllScopeTable();
+                st2.PrintAllScopeTable();
+                st3.PrintAllScopeTable();
             } else {
                 fout << "\tInvalid command" << endl;
             }

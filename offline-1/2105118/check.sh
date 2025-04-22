@@ -11,5 +11,5 @@ rm garbage.txt
 rm 2105118_report
 
 g++ -fsanitize=address -g 2105118.cpp -o 2105118
-./2105118 0 ../sample_input.txt out.txt
+./2105118 0 ../sample_input.txt output.txt
 rm 2105118

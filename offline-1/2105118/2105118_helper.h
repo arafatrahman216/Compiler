@@ -22,7 +22,7 @@ unsigned long long djb2(string str) {
     for (char c : str) {
         hash = ((hash << 5) + hash) + c; 
     }
-    return hash;
+    return llabs(hash);
 }
 
 // source : https://stackoverflow.com/questions/7666509/how-to-hash-a-string-in-c(same as above)
@@ -36,13 +36,13 @@ unsigned long long jenkins(string str) {
     hash += (hash << 3);
     hash ^= (hash >> 11);
     hash += (hash << 15);
-    return hash;
+    return llabs(hash);
 }
 
 void CommandHandler( string cmd, SymbolTable &st, string line, int &cmdcount, fstream &fout, ifstream &fin) {
     if (cmd=="I"){
         getline(fin, line); 
-        fout<<"Cmd "<<cmdcount<<": "<<cmd << line<<endl;
+        fout<<"Cmd "<<cmdcount<<": "<<cmd <<" " << trim(line)<<endl;
         stringstream ss(line);
         string name, type, extra;
         ss >> name ;
