@@ -7,27 +7,30 @@
 
 
 // source : offline spec
-unsigned long long sdbm(string str) {
-    unsigned long long hash = 0;
-    for (char c : str) {
-        hash = (c + (hash << 6) + (hash << 16) - hash);
+unsigned int sdbm ( string str , unsigned int num_buckets ) {
+    unsigned int hash = 0;
+    unsigned int len = str . length () ;
+    for ( unsigned int i = 0; i < len ; i ++)
+    {
+        hash = (( str [ i ]) + ( hash << 6) + ( hash << 16) - hash ) %
+        num_buckets ;
     }
-    return llabs(hash);
+    return hash ;
 }
 
 
 // source : https://stackoverflow.com/questions/7666509/how-to-hash-a-string-in-c
-unsigned long long djb2(string str) {
-    unsigned long long hash = 5381;
+unsigned int djb2(string str ,  unsigned int num_buckets ) {
+    unsigned int hash = 5381;
     for (char c : str) {
-        hash = ((hash << 5) + hash) + c; 
+        hash = (((hash << 5) + hash) + c) % num_buckets;
     }
-    return llabs(hash);
+    return hash;
 }
 
 // source : https://stackoverflow.com/questions/7666509/how-to-hash-a-string-in-c(same as above)
-unsigned long long jenkins(string str) {
-    unsigned long long hash = 0;
+unsigned int jenkins(string str,  unsigned int num_buckets  ) {
+    unsigned int hash = 0;
     for (char c : str) {
         hash += c;
         hash += (hash << 10);
@@ -36,7 +39,8 @@ unsigned long long jenkins(string str) {
     hash += (hash << 3);
     hash ^= (hash >> 11);
     hash += (hash << 15);
-    return llabs(hash);
+    hash %= num_buckets;
+    return hash; 
 }
 
 void CommandHandler( string cmd, SymbolTable &st, string line, int &cmdcount, fstream &fout, ifstream &fin) {

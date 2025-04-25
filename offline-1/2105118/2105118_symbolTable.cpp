@@ -6,7 +6,7 @@ class SymbolTable{
         int collisionCount ;
         int scopeCount ;
     public :
-        SymbolTable(int bucketSize, unsigned long long(*hashFunction)( string)){
+        SymbolTable(int bucketSize, unsigned int(*hashFunction)( string, unsigned int)){
             ScopeTable::initializeIDCount();
             collisionCount = 0;
             scopeCount = 0;
@@ -30,6 +30,7 @@ class SymbolTable{
             scopeTable = scopeTable->getParentScope();
             fout<< "\tScopeTable# " << temp->getId() << " removed" << endl;
             collisionCount += temp->getCollissionCount();
+            // cout<< "\tScopeTable# " << temp->getId() << " removed with " << temp->getCollissionCount() << " collisions" << endl;
             delete temp;
         }
 
@@ -89,11 +90,13 @@ class SymbolTable{
 
         int getCollisionCount() {
             ScopeTable *temp = scopeTable;
+            int a= collisionCount;
             while (temp != nullptr) {
-                collisionCount += temp->getCollissionCount();
+                a += temp->getCollissionCount();
                 temp = temp->getParentScope();
             }
-            return collisionCount;
+            // cout<< "Total Collisions: " << a << endl;
+            return a;
         }
 
         int getScopeCount() {

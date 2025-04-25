@@ -9,7 +9,7 @@ fstream fout;
 
 int main(int argc, char *argv[]) {
 
-    unsigned long (*hashFunction) (string) ;
+    unsigned int (*hashFunction) (string, unsigned int) ;
     string infile = "sample_input.txt";
     string outfile = "2105118_report.txt";
     if (argc != 2){
@@ -133,10 +133,10 @@ int main(int argc, char *argv[]) {
         << setw(20) << st3.getCollisionCount()
         << setw(30) << fixed << setprecision(6) << c<< endl;
 
-    int totalColl = st.getCollisionCount() + st2.getCollisionCount() + st3.getCollisionCount();
+    // int totalColl = st.getCollisionCount() + st2.getCollisionCount() + st3.getCollisionCount();
 
     report << endl;
-    report << "Total Collisions: " << totalColl << endl;
+    // report << "Total Collisions: " << totalColl << endl;
     report << "Bucket Size: " << bucket << endl;
 
     report.close();

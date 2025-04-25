@@ -8,7 +8,7 @@ fstream fout;
 
 
 int main( int argc, char *argv[]) {
-    unsigned long long (*hashFunction) (string) ;
+    unsigned int (*hashFunction) (string, unsigned int) ;
     string infile = "sample_input.txt"; 
     string outfile = "output.txt";
     if (argc == 1 ){

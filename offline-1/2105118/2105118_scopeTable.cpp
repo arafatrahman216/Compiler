@@ -20,13 +20,13 @@ private:
     int sid ; // static variable to keep track of scope table id
     int bucketSize ;
     int collissionCount ;
-    unsigned long long (*hashFunction)(string); // function pointer
+    unsigned int (*hashFunction)(string, unsigned int); // hash function pointer
     symbolInfo** hashtable; // hashtable of symbolInfo
     ScopeTable* parentScope ; // pointer to parent scope, to be used as a stack
 
 public:
     
-    ScopeTable(int bucketSize, unsigned long long (*hashFunction)( string))  {
+    ScopeTable(int bucketSize, unsigned int (*hashFunction)( string, unsigned int)) { 
         hashtable = new symbolInfo*[bucketSize];
         this->bucketSize = bucketSize;
         for (int i = 0; i < bucketSize; i++) {
@@ -38,6 +38,7 @@ public:
         this->hashFunction = hashFunction ;
         fout<< "\tScopeTable# " << sid << " created" << endl;
     }
+    
 
     static void initializeIDCount() {
         idCount = 0;
@@ -91,7 +92,7 @@ public:
     
     symbolInfo * getLookUp ( string name, int &position){
         name = trim(name);
-        unsigned long long index = getHash(name);
+        unsigned int index = getHash(name);
         symbolInfo * hashPointer = hashtable[index];
         while ( hashPointer!= nullptr){
             if (hashPointer->getName() == name){
@@ -103,9 +104,9 @@ public:
         return nullptr;
     }
 
-    unsigned long long getHash(string str){
+    unsigned int getHash(string str){
         str = trim(str);
-        return hashFunction(str) % bucketSize;
+        return hashFunction(str, bucketSize);
     }
 
     bool InsertSymbol(symbolInfo *sInfo) {
@@ -115,7 +116,7 @@ public:
             return false;
         } 
         sInfo->setName(trim(sInfo->getName()));
-        unsigned long long index = getHash(sInfo->getName());    
+        unsigned int index = getHash(sInfo->getName());    
         int position = 1;
         int i = 1;
         symbolInfo* found = getLookUp(sInfo->getName(), i);
@@ -154,7 +155,7 @@ public:
     symbolInfo * LookUp(string name) {
         int position = 1;
         name = trim(name);
-        unsigned long long index = getHash(name) +1 ;
+        unsigned int index = getHash(name) +1 ;
         symbolInfo* hashPointer = getLookUp(name, position);
         if (hashPointer != nullptr) {
             fout << "\t\'" << name << "\' found in ScopeTable# " << sid << " at position " << index << ", " << position << endl;
@@ -171,7 +172,7 @@ public:
             return false;
         }
         name = trim(name);
-        unsigned long long index = getHash(name);
+        unsigned int index = getHash(name);
         if (getLookUp(name, i) == nullptr) {
              fout << "\tNot found in the current ScopeTable"<<endl;
             return false;
@@ -197,7 +198,7 @@ public:
         return false;
     }
 
-    unsigned long long (*getHashFunction())(string) {
+    unsigned int (*getHashFunction())(string, unsigned int) {
         return hashFunction;
     }
 
