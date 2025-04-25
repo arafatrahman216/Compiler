@@ -11,8 +11,6 @@ class SymbolTable{
             collisionCount = 0;
             scopeCount = 0;
             scopeTable = new ScopeTable(bucketSize, hashFunction);
-
-            
         }
 
         void EnterScope(){

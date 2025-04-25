@@ -63,7 +63,7 @@ int main( int argc, char *argv[]) {
         CommandHandler(cmd, st, line, cmdcount, fout, fin);
         fin>>cmd;
     }
-     fout<<"Cmd "<<++cmdcount<<": Q"<<endl;
+    fout<<"Cmd "<<++cmdcount<<": Q"<<endl;
     
 
 }

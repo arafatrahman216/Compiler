@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 
 
     report <<left <<setw(20)<<  "Hash Function"<< setw(20)<< "Collision Count" << setw(30) <<
-    "Collision/Bucket Size" << endl;
+    "Collision/(Bucket Size * Scope Count)" << endl;
 
     report << string(70, '_') << endl;
     report << left << setw(20) << "sdbm" << setw(20) << st.getCollisionCount()
@@ -138,10 +138,6 @@ int main(int argc, char *argv[]) {
     report << endl;
     report << "Total Collisions: " << totalColl << endl;
     report << "Bucket Size: " << bucket << endl;
-    report << "Mean Ratio of Collisions to Bucket Size: "
-        << fixed << setprecision(6)
-        << (float)(a+b+c) / (3)
-        << endl;
 
     report.close();
     fout.close();

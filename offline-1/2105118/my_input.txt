@@ -1,0 +1,68 @@
+7
+I foo FUNCTION INT INT FLOAT INT
+I bar FUNCTION VOID
+I i VAR
+I j VAR
+I k VAR
+I temp VAR
+I temp2 VAR
+I max VAR
+I result VAR
+I true BOOL
+I false BOOL
+I <= RELOP
+I >= RELOP
+I == RELOP
+I != RELOP
+I a1 VAR
+I a2 VAR
+I b1 VAR
+I b2 VAR
+I student STRUCT INT id FLOAT cgpa
+I bicycle UNION INT n_gears BOOL is_hydrolic_brake
+I laptop STRUCT INT ram BOOL is_gaming
+I phone UNION BOOL is_5g INT battery
+L i
+L x
+L student
+L phone
+S
+I nested_var VAR
+I another_func FUNCTION FLOAT FLOAT
+I flag BOOL
+I counter VAR
+I another_struct STRUCT INT data BOOL valid
+L counter
+L another_struct
+S
+I scoped_inner1 VAR
+I scoped_inner2 VAR
+I scoped_inner_func FUNCTION VOID INT
+L scoped_inner1
+E
+E
+S
+I inner1 VAR
+I inner2 VAR
+I inner3 VAR
+I testFunc FUNCTION INT
+L inner2
+S
+I innerDeep VAR
+I deepFunc FUNCTION INT BOOL
+E
+E
+D i
+D j
+D foo
+D bar
+D a1
+D a2
+L gamma
+L laptop
+L result
+S
+I temp3 VAR
+I temp4 VAR
+E
+Q
