@@ -1,7 +1,7 @@
 Hash Function       Collision Count     Collision/(Bucket Size * Scope Count)
 ______________________________________________________________________
-sdbm                18                  0.428571                      
-djb2                18                  0.428571                      
-jenkins             17                  0.404762                      
+sdbm                21                  0.875000                      
+djb2                21                  0.875000                      
+jenkins             26                  1.083333                      
 
-Bucket Size: 7
+Bucket Size: 4

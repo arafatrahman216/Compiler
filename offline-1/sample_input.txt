@@ -43,9 +43,9 @@ S
 I true BOOL
 L a
 P A
-E
-E
-E
+P X
+M X
+I carcar STRUCT INT a FLOAT 
 S
 P A
 Q
