@@ -7,7 +7,7 @@
     extern std::ofstream lexLogFile;
 
 
-// Generated from C8086Lexer.g4 by ANTLR 4.13.2
+// Generated from C2105118Lexer.g4 by ANTLR 4.13.2
 
 #pragma once
 
@@ -17,7 +17,7 @@
 
 
 
-class  C8086Lexer : public antlr4::Lexer {
+class  C2105118Lexer : public antlr4::Lexer {
 public:
   enum {
     LINE_COMMENT = 1, BLOCK_COMMENT = 2, STRING = 3, WS = 4, IF = 5, ELSE = 6, 
@@ -28,9 +28,9 @@ public:
     ID = 31, CONST_INT = 32, CONST_FLOAT = 33
   };
 
-  explicit C8086Lexer(antlr4::CharStream *input);
+  explicit C2105118Lexer(antlr4::CharStream *input);
 
-  ~C8086Lexer() override;
+  ~C2105118Lexer() override;
 
 
       void writeIntoLexLogFile(const std::string &message) {

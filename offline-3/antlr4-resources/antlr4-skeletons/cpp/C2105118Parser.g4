@@ -1,7 +1,7 @@
-parser grammar C8086Parser;
+parser grammar C2105118Parser;
 
 options {
-    tokenVocab = C8086Lexer;
+    tokenVocab = C2105118Lexer;
 }
 
 @parser::header {
@@ -11,7 +11,7 @@ options {
 	#include <vector>
     #include <string>
     #include <cstdlib>
-    #include "C8086Lexer.h"
+    #include "C2105118Lexer.h"
 	#include "addons/2105118_symbolTable.h"
     extern std::ofstream parserLogFile;
     extern std::ofstream errorFile;
