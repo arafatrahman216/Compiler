@@ -1,0 +1,13 @@
+805a806,807
+> Error at line 32: Total number of arguments mismatch with declaration in function var
+> 
+1187a1190,1191
+> Error at line 45: 1th argument mismatch in function func
+> 
+1388a1393,1394
+> Error at line 49: Total number of arguments mismatch with declaration in function correct_foo
+> 
+2715c2721
+< Total number of errors: 18
+---
+> Total number of errors: 21

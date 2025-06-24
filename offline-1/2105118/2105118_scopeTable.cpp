@@ -1,5 +1,6 @@
 #include"2105118_symbolInfo.h"
 #include <algorithm>
+#include <cstring>
 
 string trim (string str) {
     //  fout<<"trimming "<<str<<endl;
@@ -12,6 +13,15 @@ string trim (string str) {
     return str;
 }
 
+bool isDuplicateVarName(char varNames[][50], int size, const char* newName) {
+    for(int i = 0; i < size; i++) {
+        if(strcmp(varNames[i], newName) == 0) {
+            cout << "duplicate" << endl;
+            return true;
+        }
+    }
+    return false;
+}
 
 class ScopeTable
 {
@@ -109,6 +119,51 @@ public:
         return hashFunction(str, bucketSize);
     }
 
+    string checkDuplicateInTypes(string type){
+        stringstream ss(type);
+        string varType;
+        ss >> varType;
+        string retValue = "Error: Invalid type in struct definition.";
+        if(varType == "INT" || varType == "FLOAT" || varType == "CHAR" || varType == "DOUBLE" || varType == "VAR" || varType == "NUMBER" || varType == "RELOP" || varType == "BOOL" || varType == "STRING" || varType == "CONST_INT"){
+            retValue = "ok";
+        }
+        else if(varType == "FUNCTION"){
+            string returnType;
+            while(ss >> returnType){
+                if(returnType == "INT" || returnType == "FLOAT" || varType == "CHAR" || returnType == "DOUBLE" || returnType == "BOOL" || returnType == "STRING" || returnType == "CONST_INT" || returnType == "CONST_FLOAT" || returnType == "VOID"){
+                    retValue = "ok";
+                }
+            }
+        }
+        else if(varType == "STRUCT" || varType == "UNION"){
+            string varType, varName;
+            char varNames[50][50];  // Array to store variable names
+            int varCount = 0;         // Counter for number of variables
+            
+            while(ss >> varType ){
+                varName = "";
+                ss >> varName;
+                if (trim(varType).empty() || trim(varName).empty()) {
+                    return "\tError: Invalid type in " + varType + " definition.";
+                }
+                
+                // Check if variable name already exists
+                if(isDuplicateVarName(varNames, varCount, varName.c_str())) {
+                    return "\tError: Duplicate variable name '" + varName + "' in " + varType + " definition." ;
+                }
+                
+                // Store the new variable name
+                strcpy(varNames[varCount], varName.c_str());
+                varCount++;
+                
+                if(varType == "INT" || varType == "FLOAT" || varType == "CHAR" || varType == "DOUBLE" || varType == "BOOL" || varType == "STRING" || varType == "CONST_INT" || varType == "CONST_FLOAT"){
+                    retValue = "ok";
+                }
+            }
+        }
+        return retValue;
+    }
+
     bool InsertSymbol(symbolInfo *sInfo) {
         // if name or type is empty or contains only spaces 
         if (sInfo->getName().empty() || sInfo->getType().empty() || sInfo->getName() == " " || sInfo->getType() == " ") {
@@ -122,6 +177,12 @@ public:
         symbolInfo* found = getLookUp(sInfo->getName(), i);
         //  fout << found << endl;
         if (found == nullptr){
+            string retValue = checkDuplicateInTypes(sInfo->getType());
+            if(retValue != "ok"){
+                fout << retValue << endl;
+                delete sInfo;
+                return false;
+            }
             symbolInfo* temp = hashtable[index];
             if (hashtable[index] == nullptr) { 
                 hashtable[index] = sInfo;

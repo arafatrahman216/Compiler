@@ -78,7 +78,7 @@ public:
         ss >> type;
 
         if (type == "INT" || type == "FLOAT" || type == "CHAR" || type == "DOUBLE" 
-                    ||type == "VAR"  || type == "NUMBER" || type == "RELOP" || type == "BOOL"  || type=="STRING") 
+                    ||type == "VAR"  || type == "NUMBER" || type == "RELOP" || type == "BOOL"  || type=="STRING" || type=="CONST_INT") 
         {
             fout << type<<"> ";
             //cout << type<<"> ";
@@ -110,7 +110,7 @@ public:
             while ( ss >> retType && ss >> varName) {
                 fout <<"("<< retType << "," << varName <<")" ;
                 //cout <<"("<< retType << "," << varName <<")" ;
-                if (ss.peek() != EOF ) {
+                if (ss.peek() != EOF && ss.peek() != ',') {
                     fout << ",";
                     ss.ignore();
                 }

@@ -1,0 +1,8 @@
+int main(){
+	char ch_ = 'p';
+	char ch2_ = '\n';
+	int ff_a_= 10;
+	char ch3 = '';
+	
+	return 0;
+}

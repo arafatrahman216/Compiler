@@ -247,15 +247,46 @@ Cmd 44: P A
 				5--> 
 				6--> 
 				7--> <foo,FUNCTION,INT<==(INT,FLOAT,INT)> 
-Cmd 45: P X
-	Invalid command for P
+Cmd 45: P A
+	ScopeTable# 7
+	1--> 
+	2--> 
+	3--> 
+	4--> 
+	5--> <true,BOOL> 
+	6--> 
+	7--> 
+		ScopeTable# 5
+		1--> 
+		2--> 
+		3--> 
+		4--> <>=,RELOP> <bicycle,UNION,{(INT,n_gears),(BOOL,is_hydrolic_brake),(STRING,brand)}> 
+		5--> 
+		6--> 
+		7--> <<=,RELOP> <foo,STRUCT,{(INT,a),(FLOAT,b)}> <num,VAR> 
+			ScopeTable# 4
+			1--> 
+			2--> 
+			3--> 
+			4--> 
+			5--> 
+			6--> 
+			7--> 
+				ScopeTable# 1
+				1--> <i,VAR> 
+				2--> 
+				3--> 
+				4--> 
+				5--> 
+				6--> 
+				7--> <foo,FUNCTION,INT<==(INT,FLOAT,INT)> 
+Cmd 46: M X
 	Invalid command
-	Invalid command
-Cmd 48: I carcar STRUCT INT a FLOAT
+Cmd 47: I carcar STRUCT INT a FLOAT c STRING b
 	Inserted in ScopeTable# 7 at position 2, 1
-Cmd 49: S
+Cmd 48: S
 	ScopeTable# 8 created
-Cmd 50: P A
+Cmd 49: P A
 	ScopeTable# 8
 	1--> 
 	2--> 
@@ -266,7 +297,7 @@ Cmd 50: P A
 	7--> 
 		ScopeTable# 7
 		1--> 
-		2--> <carcar,STRUCT,{(INT,a),}> 
+		2--> <carcar,STRUCT,{(INT,a),(FLOAT,c),(STRING,b)}> 
 		3--> 
 		4--> 
 		5--> <true,BOOL> 
@@ -296,7 +327,7 @@ Cmd 50: P A
 					5--> 
 					6--> 
 					7--> <foo,FUNCTION,INT<==(INT,FLOAT,INT)> 
-Cmd 51: Q
+Cmd 50: Q
 	ScopeTable# 8 removed
 	ScopeTable# 7 removed
 	ScopeTable# 5 removed

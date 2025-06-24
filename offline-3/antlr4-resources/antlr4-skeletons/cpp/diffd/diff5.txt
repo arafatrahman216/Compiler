@@ -1,0 +1,364 @@
+50c50
+< Line 3: type_specifier : INT
+---
+> Line 0: program : program unit
+52,56c52,53
+< int
+< 
+< Line 3: type_specifier : INT
+< 
+< int
+---
+> int x,y,z;
+> float a;
+58d54
+< Line 3: parameter_list : type_specifier
+60c56
+< int
+---
+> Line 0: program : program unit
+62c58,59
+< Error at line 3: syntax error, unexpected ADDOP, expecting RPAREN or COMMA
+---
+> int x,y,z;
+> float a;
+64d60
+< Line 4: compound_statement : LCURL RCURL
+66d61
+< {}
+68,74c63
+< ScopeTable # 1.1
+< ScopeTable # 1
+< 0 --> < var : ID >
+< 1 --> < x : ID >
+< 2 --> < y : ID >
+< 3 --> < z : ID >
+< 6 --> < a : ID >
+---
+> Line 0: program : program unit
+76c65,66
+< Line 4: func_definition : type_specifier ID LPAREN RPAREN compound_statement
+---
+> int x,y,z;
+> float a;
+78d67
+< int var(int){}
+80d68
+< Line 4: unit : func_definition
+82d69
+< int var(int){}
+84c71
+< Line 4: program : program unit
+---
+> Line 0: program : program unit
+88c75,78
+< int var(int){}
+---
+> 
+> 
+> 
+> 
+102,107d91
+< Error at line 8: syntax error, unexpected ADDOP, expecting COMMA or SEMICOLON
+< 
+< Line 8: declaration_list : declaration_list COMMA ID
+< 
+< x,z
+< 
+110c94
+< int x,z;
+---
+> int x;
+114c98
+< int x,z;
+---
+> int x;
+118c102,193
+< int x,z;
+---
+> int x;
+> 
+> Line 8: variable : ID
+> 
+> y
+> 
+> Line 8: factor : variable
+> 
+> y
+> 
+> Line 8: unary_expression : factor
+> 
+> y
+> 
+> Line 8: unary_expression : ADDOP unary_expression
+> 
+> -y
+> 
+> Line 8: term : unary_expression
+> 
+> -y
+> 
+> Line 8: simple_expression : term
+> 
+> -y
+> 
+> Line 8: rel_expression : simple_expression
+> 
+> -y
+> 
+> Line 8: logic_expression : rel_expression
+> 
+> -y
+> 
+> Line 8: expression : logic_expression
+> 
+> -y
+> 
+> Line 0: statement : expression_statement
+> 
+> 
+> 
+> Line 0: statements : statements statement
+> 
+> int x;
+> 
+> 
+> Line 8: variable : ID
+> 
+> z
+> 
+> Line 8: factor : variable
+> 
+> z
+> 
+> Line 8: unary_expression : factor
+> 
+> z
+> 
+> Line 8: term : unary_expression
+> 
+> z
+> 
+> Line 8: simple_expression : term
+> 
+> z
+> 
+> Line 8: rel_expression : simple_expression
+> 
+> z
+> 
+> Line 8: logic_expression : rel_expression
+> 
+> z
+> 
+> Line 8: expression : logic_expression
+> 
+> z
+> 
+> Line 8: expression_statement : expression SEMICOLON
+> 
+> z;
+> 
+> Line 8: statement : expression_statement
+> 
+> z;
+> 
+> Line 8: statements : statements statement
+> 
+> int x;
+> 
+> z;
+124c199
+< Line 9: factor : CONST_INT
+---
+> Line 9: expression : variable ASSIGNOP logic_expression
+126c201
+< 2
+---
+> a=
+128c203
+< Line 9: unary_expression : factor
+---
+> Line 9: expression_statement : expression SEMICOLON
+130c205
+< 2
+---
+> a=;
+132c207
+< Line 9: term : unary_expression
+---
+> Line 9: statement : expression_statement
+134c209,238
+< 2
+---
+> a=;
+> 
+> Line 9: statements : statements statement
+> 
+> int x;
+> 
+> z;
+> a=;
+> 
+> Line 0: expression : logic_expression
+> 
+> 
+> 
+> Line 0: expression_statement : expression SEMICOLON
+> 
+> ;
+> 
+> Line 0: statement : expression_statement
+> 
+> ;
+> 
+> Line 0: statements : statements statement
+> 
+> int x;
+> 
+> z;
+> a=;
+> ;
+> 
+> Line 0: expression : logic_expression
+136d239
+< Line 9: simple_expression : term
+138d240
+< 2
+140c242,257
+< Error at line 9: syntax error, unexpected ASSIGNOP
+---
+> Line 0: expression_statement : expression SEMICOLON
+> 
+> ;
+> 
+> Line 0: statement : expression_statement
+> 
+> ;
+> 
+> Line 0: statements : statements statement
+> 
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+154,156c271
+< Error at line 10: Unrecognized character #
+< 
+< Line 11: simple_expression : term
+---
+> Line 9: simple_expression : term
+160c275
+< Line 11: rel_expression : simple_expression
+---
+> Line 9: rel_expression : simple_expression
+164c279
+< Line 11: logic_expression : rel_expression
+---
+> Line 9: logic_expression : rel_expression
+168c283
+< Line 11: expression : logic_expression
+---
+> Line 9: expression : logic_expression
+171a287,304
+> Line 9: expression_statement : expression SEMICOLON
+> 
+> 6;
+> 
+> Line 9: statement : expression_statement
+> 
+> 6;
+> 
+> Line 9: statements : statements statement
+> 
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+> 
+214c347,353
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+251c390,396
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+258c403,409
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+263c414
+< ScopeTable # 1.2
+---
+> ScopeTable # 1.1
+265d415
+< 3 --> < z : ID >
+267d416
+< 0 --> < var : ID >
+276c425,431
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+284c439,445
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+293c454,457
+< int var(int){}
+---
+> 
+> 
+> 
+> 
+295c459,465
+< int x,z;
+---
+> int x;
+> 
+> z;
+> a=;
+> ;
+> ;
+> 6;
+303d472
+< 0 --> < var : ID >
+310c479
+< Total number of errors: 4
+---
+> Total number of errors: 0

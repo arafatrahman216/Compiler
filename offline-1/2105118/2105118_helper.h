@@ -111,6 +111,9 @@ void CommandHandler( string cmd, SymbolTable &st, string line, int &cmdcount, fs
          st.ExitScope();
     } 
     else {
+        string line;
+        getline(fin, line);
+         fout << "Cmd "<<cmdcount<<": "<<cmd << line << endl;
          fout << "\tInvalid command" << endl;
     }
 }
