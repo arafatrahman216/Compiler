@@ -10,7 +10,6 @@
     extern std::ofstream parserLogFile;
     extern std::ofstream errorFile;
 	
-
     extern int syntaxErrorCount;
 
 
@@ -32,18 +31,19 @@ public:
     VOID = 13, LPAREN = 14, RPAREN = 15, LCURL = 16, RCURL = 17, LTHIRD = 18, 
     RTHIRD = 19, SEMICOLON = 20, COMMA = 21, ADDOP = 22, SUBOP = 23, MULOP = 24, 
     INCOP = 25, DECOP = 26, NOT = 27, RELOP = 28, LOGICOP = 29, ASSIGNOP = 30, 
-    ID = 31, CONST_INT = 32, CONST_FLOAT = 33
+    ID = 31, CONST_INT = 32, CONST_FLOAT = 33, HASH = 34, UNRECOGNIZED_CHAR = 35
   };
 
   enum {
     RuleStart = 0, RuleProgram = 1, RuleUnit = 2, RuleFunc_declaration = 3, 
-    RuleFunc_definition = 4, RuleParameter_list = 5, RuleCompound_statement = 6, 
-    RuleVar_declaration = 7, RuleDeclaration_list_err = 8, RuleType_specifier = 9, 
-    RuleDeclaration_list = 10, RuleStatements = 11, RuleStatement = 12, 
-    RuleExpression_statement = 13, RuleVariable = 14, RuleExpression = 15, 
-    RuleLogic_expression = 16, RuleRel_expression = 17, RuleSimple_expression = 18, 
-    RuleTerm = 19, RuleUnary_expression = 20, RuleFactor = 21, RuleArgument_list = 22, 
-    RuleArguments = 23
+    RuleFunc_definition = 4, RuleParameter_list = 5, RuleParameter_list_err = 6, 
+    RuleCompound_statement = 7, RuleVar_declaration = 8, RuleDeclaration_list_err = 9, 
+    RuleType_specifier = 10, RuleDeclaration_list = 11, RuleStatements = 12, 
+    RuleStatement = 13, RuleExpression_statement = 14, RuleVariable = 15, 
+    RuleExpression = 16, RuleLogic_expression_err = 17, RuleLogic_expression = 18, 
+    RuleRel_expression = 19, RuleSimple_expression = 20, RuleTerm = 21, 
+    RuleUnary_expression = 22, RuleFactor = 23, RuleArgument_list = 24, 
+    RuleArguments = 25
   };
 
   explicit C2105118Parser(antlr4::TokenStream *input);
@@ -65,10 +65,14 @@ public:
 
   	SymbolTable symbolTable; 
   	int func_def=0;
+  	int stopargMismatch = 0;
+  	std::string stopargMismatchName = "";
   	std::string currentIndex= "CONST_INT";
   	std::string currentType = "INT";
   	std:: string retType = "";
   	vector<std::string> currentParams;
+  	vector<std::string> currentArgs;
+  	
 
       void writeIntoparserLogFile(const std::string message, int newlineCount=1) {
           if (!parserLogFile) {
@@ -91,8 +95,9 @@ public:
           errorFile.flush();
       }
 
-  	void insertIntoSymbolTable(const std::string &name, const std::string &type, int line_number, bool isArray=false, int isFunction=0, int func_params=0) {
-  		if (!symbolTable.Insert(name, type, isArray, isFunction,currentParams, parserLogFile) && isFunction == 0) {
+  	bool insertIntoSymbolTable(const std::string &name, const std::string &type, int line_number, vector<std::string> params, bool isArray=false, int isFunction=0, int func_params=0) {
+  		bool insertSuccess = symbolTable.Insert(name, type, isArray, isFunction, params, parserLogFile);
+  		if (!insertSuccess && isFunction == 0) {
   			std::string errMsg = "Error at line " + std::to_string(line_number) + ": Multiple declaration of " + name;
   			if (func_params > 0) {
   				errMsg += " in parameter";
@@ -101,6 +106,8 @@ public:
   			writeIntoparserLogFile(errMsg, 2);
   			syntaxErrorCount++;
   		}
+  		return insertSuccess;
+
   		// cout << "Inserting into symbol table: " << name << " of type " << type << " at line " << line_number << endl;	
   	}
 
@@ -135,6 +142,7 @@ public:
   class Func_declarationContext;
   class Func_definitionContext;
   class Parameter_listContext;
+  class Parameter_list_errContext;
   class Compound_statementContext;
   class Var_declarationContext;
   class Declaration_list_errContext;
@@ -145,6 +153,7 @@ public:
   class Expression_statementContext;
   class VariableContext;
   class ExpressionContext;
+  class Logic_expression_errContext;
   class Logic_expressionContext;
   class Rel_expressionContext;
   class Simple_expressionContext;
@@ -238,6 +247,7 @@ public:
     antlr4::Token *idToken = nullptr;
     C2105118Parser::Parameter_listContext *parameter_listContext = nullptr;
     C2105118Parser::Compound_statementContext *cs = nullptr;
+    C2105118Parser::Parameter_list_errContext *parameter_list_errContext = nullptr;
     Func_definitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     Type_specifierContext *type_specifier();
@@ -246,6 +256,7 @@ public:
     Parameter_listContext *parameter_list();
     antlr4::tree::TerminalNode *RPAREN();
     Compound_statementContext *compound_statement();
+    Parameter_list_errContext *parameter_list_err();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -274,6 +285,23 @@ public:
 
   Parameter_listContext* parameter_list();
   Parameter_listContext* parameter_list(int precedence);
+  class  Parameter_list_errContext : public antlr4::ParserRuleContext {
+  public:
+    std::string name_line;
+    C2105118Parser::Type_specifierContext *type_specifierContext = nullptr;
+    antlr4::Token *addopToken = nullptr;
+    Parameter_list_errContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Type_specifierContext *type_specifier();
+    antlr4::tree::TerminalNode *ADDOP();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  Parameter_list_errContext* parameter_list_err();
+
   class  Compound_statementContext : public antlr4::ParserRuleContext {
   public:
     std::string unit_name;
@@ -300,12 +328,15 @@ public:
     C2105118Parser::Type_specifierContext *t = nullptr;
     C2105118Parser::Declaration_listContext *dl = nullptr;
     antlr4::Token *sm = nullptr;
+    antlr4::Token *addopToken = nullptr;
     C2105118Parser::Declaration_list_errContext *de = nullptr;
     Var_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     Type_specifierContext *type_specifier();
     Declaration_listContext *declaration_list();
     antlr4::tree::TerminalNode *SEMICOLON();
+    antlr4::tree::TerminalNode *ADDOP();
+    antlr4::tree::TerminalNode *ID();
     Declaration_list_errContext *declaration_list_err();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -355,6 +386,7 @@ public:
     C2105118Parser::Declaration_listContext *dl = nullptr;
     antlr4::Token *idToken = nullptr;
     antlr4::Token *const_intToken = nullptr;
+    antlr4::Token *addopToken = nullptr;
     Declaration_listContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *ID();
@@ -363,6 +395,7 @@ public:
     antlr4::tree::TerminalNode *RTHIRD();
     antlr4::tree::TerminalNode *COMMA();
     Declaration_listContext *declaration_list();
+    antlr4::tree::TerminalNode *ADDOP();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -459,6 +492,7 @@ public:
     int line_number;
     std::string trueName;
     bool indexed = false;
+    std::string type;
     antlr4::Token *idToken = nullptr;
     C2105118Parser::ExpressionContext *expressionContext = nullptr;
     VariableContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -487,6 +521,7 @@ public:
     Logic_expressionContext *logic_expression();
     VariableContext *variable();
     antlr4::tree::TerminalNode *ASSIGNOP();
+    Logic_expression_errContext *logic_expression_err();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -494,6 +529,26 @@ public:
   };
 
   ExpressionContext* expression();
+
+  class  Logic_expression_errContext : public antlr4::ParserRuleContext {
+  public:
+    std::string var_name;
+    int line_number;
+    std::string type;
+    antlr4::Token *addopToken = nullptr;
+    Logic_expression_errContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Simple_expressionContext *simple_expression();
+    antlr4::tree::TerminalNode *ADDOP();
+    antlr4::tree::TerminalNode *ASSIGNOP();
+    ExpressionContext *expression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  Logic_expression_errContext* logic_expression_err();
 
   class  Logic_expressionContext : public antlr4::ParserRuleContext {
   public:
@@ -543,12 +598,15 @@ public:
     std::string var_name;
     int line_number;
     std::string type;
+    std::string err;
     C2105118Parser::Simple_expressionContext *se = nullptr;
     C2105118Parser::TermContext *termContext = nullptr;
+    antlr4::Token *hashToken = nullptr;
     antlr4::Token *addopToken = nullptr;
     Simple_expressionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     TermContext *term();
+    antlr4::tree::TerminalNode *HASH();
     antlr4::tree::TerminalNode *ADDOP();
     Simple_expressionContext *simple_expression();
 
@@ -586,8 +644,9 @@ public:
     int line_number;
     std::string type;
     antlr4::Token *addopToken = nullptr;
-    C2105118Parser::Unary_expressionContext *unary_expressionContext = nullptr;
+    C2105118Parser::Unary_expressionContext *ue = nullptr;
     antlr4::Token *notToken = nullptr;
+    C2105118Parser::Unary_expressionContext *unary_expressionContext = nullptr;
     C2105118Parser::FactorContext *factorContext = nullptr;
     Unary_expressionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;

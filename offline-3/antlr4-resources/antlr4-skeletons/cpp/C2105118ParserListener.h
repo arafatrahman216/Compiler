@@ -32,6 +32,9 @@ public:
   virtual void enterParameter_list(C2105118Parser::Parameter_listContext *ctx) = 0;
   virtual void exitParameter_list(C2105118Parser::Parameter_listContext *ctx) = 0;
 
+  virtual void enterParameter_list_err(C2105118Parser::Parameter_list_errContext *ctx) = 0;
+  virtual void exitParameter_list_err(C2105118Parser::Parameter_list_errContext *ctx) = 0;
+
   virtual void enterCompound_statement(C2105118Parser::Compound_statementContext *ctx) = 0;
   virtual void exitCompound_statement(C2105118Parser::Compound_statementContext *ctx) = 0;
 
@@ -61,6 +64,9 @@ public:
 
   virtual void enterExpression(C2105118Parser::ExpressionContext *ctx) = 0;
   virtual void exitExpression(C2105118Parser::ExpressionContext *ctx) = 0;
+
+  virtual void enterLogic_expression_err(C2105118Parser::Logic_expression_errContext *ctx) = 0;
+  virtual void exitLogic_expression_err(C2105118Parser::Logic_expression_errContext *ctx) = 0;
 
   virtual void enterLogic_expression(C2105118Parser::Logic_expressionContext *ctx) = 0;
   virtual void exitLogic_expression(C2105118Parser::Logic_expressionContext *ctx) = 0;

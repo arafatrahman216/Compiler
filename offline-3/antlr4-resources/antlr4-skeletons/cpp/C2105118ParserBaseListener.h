@@ -34,6 +34,9 @@ public:
   virtual void enterParameter_list(C2105118Parser::Parameter_listContext * /*ctx*/) override { }
   virtual void exitParameter_list(C2105118Parser::Parameter_listContext * /*ctx*/) override { }
 
+  virtual void enterParameter_list_err(C2105118Parser::Parameter_list_errContext * /*ctx*/) override { }
+  virtual void exitParameter_list_err(C2105118Parser::Parameter_list_errContext * /*ctx*/) override { }
+
   virtual void enterCompound_statement(C2105118Parser::Compound_statementContext * /*ctx*/) override { }
   virtual void exitCompound_statement(C2105118Parser::Compound_statementContext * /*ctx*/) override { }
 
@@ -63,6 +66,9 @@ public:
 
   virtual void enterExpression(C2105118Parser::ExpressionContext * /*ctx*/) override { }
   virtual void exitExpression(C2105118Parser::ExpressionContext * /*ctx*/) override { }
+
+  virtual void enterLogic_expression_err(C2105118Parser::Logic_expression_errContext * /*ctx*/) override { }
+  virtual void exitLogic_expression_err(C2105118Parser::Logic_expression_errContext * /*ctx*/) override { }
 
   virtual void enterLogic_expression(C2105118Parser::Logic_expressionContext * /*ctx*/) override { }
   virtual void exitLogic_expression(C2105118Parser::Logic_expressionContext * /*ctx*/) override { }

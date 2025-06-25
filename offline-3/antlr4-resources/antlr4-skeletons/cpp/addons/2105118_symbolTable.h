@@ -50,6 +50,7 @@ class SymbolTable{
         }
 
         bool Insert(string name, string type, bool isArray, int isFunction, vector<string> params, ofstream &fout) {
+            if (isFunction ==0) params.clear(); // if not a function, clear params vector
             symbolInfo *sInfo = new symbolInfo(name, type, isArray, isFunction, params, nullptr);
             return scopeTable->InsertSymbol(sInfo);
         }
@@ -129,5 +130,16 @@ class SymbolTable{
             }
             return hash%num_buckets;
         }
+
+        bool setParams(string name, vector<string> params) {
+            symbolInfo *sInfo = LookUp(name);
+            if (sInfo != nullptr) {
+                sInfo->setParams(params);
+                return true;
+            }
+            return false;
+        }
+
+        
         
 };

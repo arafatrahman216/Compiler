@@ -136,3 +136,12 @@ CONST_FLOAT
         );
     }
     ;
+
+  HASH    : '#' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <HASH> Lexeme " + getText()); };  
+
+    UNRECOGNIZED_CHAR : . {
+        writeIntoLexLogFile(
+          "Line# " + std::to_string(getLine())
+          + ": Token <UNRECOGNIZED_CHAR> Lexeme " + getText()
+        );
+    } ;

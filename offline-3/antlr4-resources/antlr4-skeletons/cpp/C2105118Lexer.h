@@ -25,7 +25,7 @@ public:
     VOID = 13, LPAREN = 14, RPAREN = 15, LCURL = 16, RCURL = 17, LTHIRD = 18, 
     RTHIRD = 19, SEMICOLON = 20, COMMA = 21, ADDOP = 22, SUBOP = 23, MULOP = 24, 
     INCOP = 25, DECOP = 26, NOT = 27, RELOP = 28, LOGICOP = 29, ASSIGNOP = 30, 
-    ID = 31, CONST_INT = 32, CONST_FLOAT = 33
+    ID = 31, CONST_INT = 32, CONST_FLOAT = 33, HASH = 34, UNRECOGNIZED_CHAR = 35
   };
 
   explicit C2105118Lexer(antlr4::CharStream *input);
@@ -102,6 +102,8 @@ private:
   void IDAction(antlr4::RuleContext *context, size_t actionIndex);
   void CONST_INTAction(antlr4::RuleContext *context, size_t actionIndex);
   void CONST_FLOATAction(antlr4::RuleContext *context, size_t actionIndex);
+  void HASHAction(antlr4::RuleContext *context, size_t actionIndex);
+  void UNRECOGNIZED_CHARAction(antlr4::RuleContext *context, size_t actionIndex);
 
   // Individual semantic predicate functions triggered by sempred() above.
 

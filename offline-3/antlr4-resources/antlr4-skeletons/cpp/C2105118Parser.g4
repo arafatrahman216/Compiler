@@ -16,17 +16,20 @@ options {
     extern std::ofstream parserLogFile;
     extern std::ofstream errorFile;
 	
-
     extern int syntaxErrorCount;
 }
 
 @parser::members {
 	SymbolTable symbolTable; 
 	int func_def=0;
+	int stopargMismatch = 0;
+	std::string stopargMismatchName = "";
 	std::string currentIndex= "CONST_INT";
 	std::string currentType = "INT";
 	std:: string retType = "";
 	vector<std::string> currentParams;
+	vector<std::string> currentArgs;
+	
 
     void writeIntoparserLogFile(const std::string message, int newlineCount=1) {
         if (!parserLogFile) {
@@ -49,8 +52,9 @@ options {
         errorFile.flush();
     }
 
-	void insertIntoSymbolTable(const std::string &name, const std::string &type, int line_number, bool isArray=false, int isFunction=0, int func_params=0) {
-		if (!symbolTable.Insert(name, type, isArray, isFunction,currentParams, parserLogFile) && isFunction == 0) {
+	bool insertIntoSymbolTable(const std::string &name, const std::string &type, int line_number, vector<std::string> params, bool isArray=false, int isFunction=0, int func_params=0) {
+		bool insertSuccess = symbolTable.Insert(name, type, isArray, isFunction, params, parserLogFile);
+		if (!insertSuccess && isFunction == 0) {
 			std::string errMsg = "Error at line " + std::to_string(line_number) + ": Multiple declaration of " + name;
 			if (func_params > 0) {
 				errMsg += " in parameter";
@@ -59,6 +63,8 @@ options {
 			writeIntoparserLogFile(errMsg, 2);
 			syntaxErrorCount++;
 		}
+		return insertSuccess;
+
 		// cout << "Inserting into symbol table: " << name << " of type " << type << " at line " << line_number << endl;	
 	}
 
@@ -143,19 +149,28 @@ unit returns  [ std::string unit_name ,int line_number]
     ;
 
 func_declaration returns [std::string unit_name, int line_number]
-		 : type_specifier ID LPAREN parameter_list RPAREN sm=SEMICOLON {
+		 : type_specifier ID LPAREN parameter_list RPAREN {
+				// cout<<" in RPAREN of func_declaration, parameter size is: " << currentParams.size() << endl;
+
+			} sm=SEMICOLON {
 			std::string var_type = $type_specifier.type;
-			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),false, 1);
-		std::string message = "Line " + std::to_string($sm->getLine()) + ": func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON";
-		message += "\n\n" + $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list.name_line + ");";
-		writeIntoparserLogFile(message, 2);
-		$unit_name = $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list.name_line + ");";
-		$line_number = $ID->getLine();
+
+			// cout<<"param size of " << $ID->getText() << " when inserting into symbol table: " << currentParams.size() << endl;
+			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams,false, 1);
+			std::string message = "Line " + std::to_string($sm->getLine()) + ": func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON";
+			message += "\n\n" + $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list.name_line + ");";
+			writeIntoparserLogFile(message, 2);
+			$unit_name = $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list.name_line + ");";
+			$line_number = $ID->getLine();
+			currentParams.clear(); // Clear current parameters after function declaration
 
 		}
-		| type_specifier ID LPAREN RPAREN sm=SEMICOLON  {
+		| type_specifier ID LPAREN RPAREN {
+				// cout<<" in RPAREN of func_declaration, parameter size is: " << currentParams.size() << endl;
+
+			} sm=SEMICOLON  {
 			std::string var_type = $type_specifier.type;
-			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),false, 1);
+			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams,false, 1);
 			std::string message = "Line " + std::to_string($sm->getLine()) + ": func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON";
 			message += "\n\n" + $type_specifier.name_line + " " + $ID->getText() + "();";
 			writeIntoparserLogFile(message, 2);
@@ -169,36 +184,112 @@ func_definition returns [std::string unit_name, int line_number]
 			std::string var_type = $type_specifier.type;
 			// cout<< "var_type is: " << var_type << endl;
 			retType = var_type;
-			cout<< "retType is: " << retType << endl;
-			
-			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),false, 1);
+			// cout<< "retType is: " << retType << endl;
+			bool success = insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams,false, 1);
 		}
 		LPAREN {
 				func_def=1;
 				enterScope();
 			}
 			parameter_list{
+				int err=0;
 
 				symbolInfo* sinfo = getVarType($ID->getText());
 				int isFunction = sinfo ? sinfo->getIsFunction() : 1;
 				if (isFunction == 0){
+					err++;
 					std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Multiple declaration of " + $ID->getText();
 					writeIntoErrorFile(errMsg);
 					writeIntoparserLogFile(errMsg, 2);
 					syntaxErrorCount++;
 				}
+
 				if (sinfo != nullptr && sinfo->getType() != var_type) {
+					err++;
 					std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Return type mismatch of " + $ID->getText();
 					writeIntoErrorFile(errMsg);
 					writeIntoparserLogFile(errMsg, 2);
 					syntaxErrorCount++;
 			}
 				
-				} RPAREN cs=compound_statement {
+				}
+			RPAREN { 
+				if (!success && err == 0) {
+					int paramsSize = currentParams.size();
+					int storedParamsSize = sinfo ? sinfo->getParams().size() : 0;
+					if (paramsSize != storedParamsSize) {
+						std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Total number of arguments mismatch with declaration in function " + $ID->getText();
+						writeIntoErrorFile(errMsg);
+						writeIntoparserLogFile(errMsg, 2);
+						syntaxErrorCount++;
+					}
+					else {
+						for (int i = 0; i < paramsSize; i++) {
+							if (currentParams[i] != sinfo->getParams()[i]) {
+								std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": " + std::to_string(i+1) + "th argument mismatch in function " + $ID->getText();
+								writeIntoErrorFile(errMsg);
+								writeIntoparserLogFile(errMsg, 2);
+								syntaxErrorCount++;
+								cout << "Error at line " << $ID->getLine() << ": " << i+1 << "th argument mismatch in function " << $ID->getText() << endl;
+								break;
+							}
+						}
+						cout<<"ok" << endl;
+					}
+				}
+				symbolTable.setParams($ID->getText(), currentParams);
+				// cout<<"param size of " << $ID->getText() << " when inserting into symbol table: " << currentParams.size() << endl;
+				currentParams.clear(); // Clear current parameters after function definition 
+				}
+			cs=compound_statement {
 			// cout<< "type_specifier is: " << $type_specifier.name_line << endl;
 			$unit_name = $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list.name_line + ")" + $cs.unit_name ;
 			$line_number = $cs.line_number;
 			std::string message = "Line " + std::to_string($cs.line_number) + ": func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement";
+			message += "\n\n" + $unit_name;
+			writeIntoparserLogFile(message, 2);
+			retType = "";
+		}|
+		type_specifier ID {			
+			std::string var_type = $type_specifier.type;
+			// cout<< "var_type is: " << var_type << endl;
+			retType = var_type;
+			// cout<< "retType is: " << retType << endl;
+			bool success = insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams,false, 1);
+		}
+		LPAREN {
+				func_def=1;
+				enterScope();
+			}
+			parameter_list_err{
+				int err=0;
+
+				symbolInfo* sinfo = getVarType($ID->getText());
+				int isFunction = sinfo ? sinfo->getIsFunction() : 1;
+				if (isFunction == 0){
+					err++;
+					std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Multiple declaration of " + $ID->getText();
+					writeIntoErrorFile(errMsg);
+					writeIntoparserLogFile(errMsg, 2);
+					syntaxErrorCount++;
+				}
+
+				if (sinfo != nullptr && sinfo->getType() != var_type) {
+					err++;
+					std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Return type mismatch of " + $ID->getText();
+					writeIntoErrorFile(errMsg);
+					writeIntoparserLogFile(errMsg, 2);
+					syntaxErrorCount++;
+			}
+				
+				}
+			RPAREN { 
+				currentParams.clear(); // Clear current parameters after function definition 
+				}
+			cs=compound_statement {
+			$unit_name = $type_specifier.name_line + " " + $ID->getText() + "(" + $parameter_list_err.name_line + ")" + $cs.unit_name ;
+			$line_number = $cs.line_number;
+			std::string message = "Line " + std::to_string($cs.line_number) + ": func_definition : type_specifier ID LPAREN RPAREN compound_statement";
 			message += "\n\n" + $unit_name;
 			writeIntoparserLogFile(message, 2);
 			retType = "";
@@ -207,8 +298,8 @@ func_definition returns [std::string unit_name, int line_number]
 		std::string var_type = $type_specifier.type;
 		// cout<< "var_type is: " << var_type << endl;
 		retType = var_type;
-		cout<< "retType is: " << retType << endl;
-			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),false, 1);
+		// cout<< "retType is: " << retType << endl;
+			insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams,false, 1);
 		}
 		LPAREN{
 				func_def=1;
@@ -221,6 +312,7 @@ func_definition returns [std::string unit_name, int line_number]
 			std::string message = "Line " + std::to_string($cs.line_number) + ": func_definition : type_specifier ID LPAREN RPAREN compound_statement";
 			message += "\n\n" + $unit_name;
 			writeIntoparserLogFile(message, 2);
+			
 		}
  		;				
 
@@ -229,9 +321,10 @@ parameter_list returns [std::string name_line]
   : pl=parameter_list COMMA type_specifier ID{
 	// cout<< "func_def is: "<< func_def <<endl;
 	std::string var_type = $type_specifier.type;
-	currentParams.push_back($ID->getText());
+	currentParams.push_back($type_specifier.type);
+	// cout<< "size is : hh " << currentParams.size() <<"for " << $ID->getText() << endl;
 	if (func_def==1) {
-		insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(), false, 0,1);
+		insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(), currentParams, false, 0,1);
 	}
 	// cout<<"Inserting into symbol table: "<< $ID->getText() <<"while func_def is"<<func_def<<endl;
 	$name_line = $pl.name_line + "," + $type_specifier.name_line + " " + $ID->getText();
@@ -248,27 +341,48 @@ parameter_list returns [std::string name_line]
 	writeIntoparserLogFile(message, 2);
 	}
 	| type_specifier ID {
-	// cout<< "func_def is: "<< func_def <<endl;
 
-	currentParams.push_back($ID->getText());
+	currentParams.push_back($type_specifier.type);
+
+	// cout<< "type+spec id "<<endl;
+	// cout<< "size is : " << currentParams.size() <<"for " << $ID->getText() << endl;
+
 	std::string var_type = $type_specifier.type;
 	if (func_def==1) {
-		insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(), false, 0,1);
+		insertIntoSymbolTable($ID->getText(), var_type, $ID->getLine(),currentParams, false, 0,1);
 	}
 	$name_line = $type_specifier.name_line + " " + $ID->getText();
 	std::string message = "Line " + std::to_string($ID->getLine()) + ": parameter_list : type_specifier ID";
 	message += "\n\n" + $name_line;
-	writeIntoparserLogFile(message, 2);
+	symbolInfo* sinfo = getVarType($ID->getText());
+	// if (sinfo) {
+	// 	cout << "Variable " << $ID->getText() << " is of type " << sinfo->getType() << endl;
+	// }
+	vector<std::string> storedParams = sinfo ? sinfo->getParams() : vector<std::string>();
+	// cout << "Stored parameter no. for " << $ID->getText() << ": " << storedParams.size() << endl;
+	writeIntoparserLogFile(message, 2);  
 	}
 	| type_specifier {
-		$name_line = $type_specifier.name_line;
-		std::string message = "Line " + std::to_string($type_specifier.line_number) + ": parameter_list : type_specifier";
-		message += "\n\n" + $type_specifier.name_line;
+		cout<< "type"<<endl;
+		$name_line = $type_specifier.name_line ;
+		std::string message = "Error at line " + std::to_string($type_specifier.line_number) + ": parameter_list : type_specifier";
+ 		message += "\n\n" + $name_line;
 		writeIntoparserLogFile(message, 2);
-	}
- 		;
+	};
 
- 		
+parameter_list_err returns [std::string name_line]
+	: type_specifier ADDOP{
+		cout<< "type"<<endl;
+		$name_line = $type_specifier.name_line ;
+		std::string err= "Error at line " + std::to_string($ADDOP->getLine()) + ": syntax error, unexpected ADDOP, expecting RPAREN or COMMA";
+		std::string message = "Line " + std::to_string($ADDOP->getLine()) + ": parameter_list : type_specifier";
+		message += "\n\n" + $name_line;
+		message += "\n\nError at line "+ std::to_string($ADDOP->getLine()) + ": syntax error, unexpected ADDOP, expecting RPAREN or COMMA";
+		syntaxErrorCount++;
+		writeIntoparserLogFile(message, 2);
+		writeIntoErrorFile(err);
+	};
+
 compound_statement returns [std::string unit_name, int line_number]
 	
 			: LCURL{
@@ -298,9 +412,9 @@ compound_statement returns [std::string unit_name, int line_number]
 			RCURL { 
 				func_def=0;
 				std::string message = "Line " + std::to_string($RCURL->getLine()) + ": compound_statement : LCURL RCURL";
-				$unit_name = "{\n}";
+				$unit_name = "{}";
 				$line_number = $RCURL->getLine();
-				message += "\n\n" + $unit_name;
+				message += "\n\n{}" ;
 				writeIntoparserLogFile(message, 2);
 				exitScope();
 
@@ -322,6 +436,15 @@ var_declaration returns [std::string var_name, int line_number]
 		$line_number = $sm->getLine();
 		writeIntoparserLogFile(message, 2);
       }
+	|
+	  declaration_list ADDOP ID {
+        $var_name = "";
+		std::string message = "Error at line " + std::to_string($ADDOP->getLine()) + ": "+ $var_name;
+		writeIntoErrorFile(message)	;
+		$line_number = $ADDOP->getLine();
+		writeIntoparserLogFile(message, 2);
+		cout << "Error in declaration list" << endl;
+    }
 
     | t=type_specifier de=declaration_list_err sm=SEMICOLON {
         writeIntoErrorFile(
@@ -329,6 +452,7 @@ var_declaration returns [std::string var_name, int line_number]
             " with error name: " + $de.error_name +
             " - Syntax error at declaration list of variable declaration"
         );
+		cout << "Error at line " << $sm->getLine() << ": " << $de.error_name << endl;
 
         syntaxErrorCount++;
       }
@@ -372,25 +496,37 @@ declaration_list returns [std::string name_line]
 		  : dl=declaration_list COMMA ID {
 			$name_line = $dl.name_line +"," + $ID->getText();
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": declaration_list : declaration_list COMMA ID"+ "\n\n" + $name_line;
-			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(), false,0);
+			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(),currentParams, false,0);
 			writeIntoparserLogFile(message,2);
 			}
+			|
+			dl=declaration_list ADDOP ID {
+			$name_line = $dl.name_line ;
+				std::string message = "Error at line " + std::to_string($ADDOP->getLine()) + ": syntax error, unexpected ADDOP, expecting COMMA or SEMICOLON";
+				writeIntoErrorFile(message);
+				writeIntoparserLogFile(message, 2);
+				syntaxErrorCount++;
+				syntaxErrorCount++;
+				cout<<"hello"<<endl;
+			}
+
  		  | dl=declaration_list COMMA ID LTHIRD CONST_INT RTHIRD {
 			$name_line = $dl.name_line + "," + $ID->getText() + "[" + $CONST_INT->getText() + "]";
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD"+ "\n\n" + $name_line;
-			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(), true);
+			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(),currentParams, true);
 			writeIntoparserLogFile(message,2);
 		  }
  		  | ID {
 			$name_line = $ID->getText() ;
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": declaration_list : ID"+ "\n\n" + $ID->getText();
-			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(), false,0);
+			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(),currentParams, false,0);
 			writeIntoparserLogFile(message,2);
 		  }
+		  
  		  | ID LTHIRD CONST_INT RTHIRD {
 			$name_line = $ID->getText() + "[" + $CONST_INT->getText() + "]";
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": declaration_list : ID LTHIRD CONST_INT RTHIRD"+ "\n\n" + $name_line;
-			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(), true,0);
+			insertIntoSymbolTable($ID->getText(), currentType, $ID->getLine(),currentParams, true,0);
 			writeIntoparserLogFile(message,2);
 		  }
  		  ;
@@ -405,11 +541,14 @@ statements returns [std::string unit_name, int line_number, bool retError= false
 			writeIntoparserLogFile(message, 2);
 		}
 	   | sts=statements statement {
-			$unit_name = $sts.unit_name + "\n" + $statement.unit_name;
-			$line_number = $statement.line_number;
+		$unit_name = $sts.unit_name ;
+		$line_number = $statement.line_number;
+		if (!$statement.unit_name.empty()) {
+			$unit_name +=("\n" + $statement.unit_name);
 			std::string message = "Line " + std::to_string($statement.line_number) + ": statements : statements statement";
 			message += "\n\n" + $unit_name;
 			writeIntoparserLogFile(message, 2);
+		}
 		}
 	   ;
 	   
@@ -423,11 +562,14 @@ statement returns [std::string unit_name, int line_number, bool retError= false]
 			writeIntoparserLogFile(message, 2);
 		}
 	  | expression_statement { 
-			std::string message = "Line " + std::to_string($expression_statement.line_number) + ": statement : expression_statement";
-			$unit_name = $expression_statement.unit_name;
 			$line_number = $expression_statement.line_number;
+			$unit_name = $expression_statement.unit_name;
+		    if (!$expression_statement.unit_name.empty()) {
+
+			std::string message = "Line " + std::to_string($expression_statement.line_number) + ": statement : expression_statement";
 			message += "\n\n" + $unit_name;
 			writeIntoparserLogFile(message, 2);
+			}
 		}
 	  | compound_statement {
 		std::string message = "Line " + std::to_string($compound_statement.line_number) + ": statement : compound_statement";
@@ -489,6 +631,7 @@ statement returns [std::string unit_name, int line_number, bool retError= false]
 			message += "\n\n" + $unit_name;
 			writeIntoparserLogFile(message, 2);
 		}
+		
 	  ;
 	  
 expression_statement returns [std::string unit_name, int line_number]
@@ -501,17 +644,22 @@ expression_statement returns [std::string unit_name, int line_number]
 		}
 		| expression SEMICOLON {
 			std::string message = "Line " + std::to_string($expression.line_number) + ": expression_statement : expression SEMICOLON";
-			$unit_name = $expression.var_name + ";";
+			$unit_name = $expression.var_name ;
+			if (!$unit_name.empty()) {
+				$unit_name = $expression.var_name+ ";";
+				message += "\n\n" + $unit_name ;
+				writeIntoparserLogFile(message, 2);
+			}
 			$line_number = $expression.line_number;
-			message += "\n\n" + $unit_name ;
-			writeIntoparserLogFile(message, 2);
 		}
+		
 			;
 
-variable returns [std::string var_name, int line_number, std::string trueName, bool indexed=false]
+variable returns [std::string var_name, int line_number, std::string trueName, bool indexed=false, std::string type]
 		: ID 		{
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": variable : ID";
 			symbolInfo* sinfo = getVarType($ID->getText());
+			$type = "";
 			if (sinfo == nullptr) {
 				std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Undeclared variable " + $ID->getText();
 				writeIntoErrorFile(errMsg);
@@ -523,7 +671,13 @@ variable returns [std::string var_name, int line_number, std::string trueName, b
 				std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Type mismatch, " + $ID->getText() + " is an array";
 				writeIntoErrorFile(errMsg);
 				message += "\n\n" + errMsg;
+				stopargMismatch++;
+				stopargMismatchName = $ID->getText();
 				syntaxErrorCount++;
+
+				$type = sinfo->getType() + "[]"; // indicate that it's an array
+			} else {
+				$type = sinfo->getType();
 			}
 			$var_name = $ID->getText();
 			$line_number = $ID->getLine();
@@ -536,9 +690,9 @@ variable returns [std::string var_name, int line_number, std::string trueName, b
 	 | ID LTHIRD expression RTHIRD {
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": variable : ID LTHIRD expression RTHIRD";
 			$var_name = $ID->getText() + "[" + $expression.var_name + "]";
-			$trueName = $ID->getText() ;
+			$trueName = $ID->getText();
 			symbolInfo* sinfo = getVarType($ID->getText());
-
+			std::string type = sinfo ? sinfo->getType() : "";
 			$line_number = $ID->getLine();
 			if (sinfo != nullptr) {
 				if (!sinfo->getIsArray()){
@@ -639,7 +793,31 @@ variable returns [std::string var_name, int line_number, std::string trueName, b
 			message += "\n\n" + $var_name ;
 			writeIntoparserLogFile(message, 2);
 	}
+	|
+	variable ASSIGNOP logic_expression_err{
+			$var_name = "";
+			$line_number = $ASSIGNOP->getLine();
+			
+		}
+
+	
 	;
+
+
+logic_expression_err returns [std::string var_name, int line_number, std::string type]
+		: simple_expression ADDOP ASSIGNOP{
+			cout<<"Hes the boss"<<endl;
+			$var_name = "";
+			std::string message = "Error at line " + std::to_string($ADDOP->getLine()) + ": syntax error, unexpected ASSIGNOP";
+			writeIntoErrorFile(message);
+			$line_number = $ADDOP->getLine();
+			writeIntoparserLogFile(message, 2);
+			syntaxErrorCount++;
+			$type = "INT"; // Default type for logic expressions
+
+		} expression 
+
+		; 
 			
 logic_expression returns [std::string var_name, int line_number, std::string type]
 		: rel_expression {
@@ -651,6 +829,7 @@ logic_expression returns [std::string var_name, int line_number, std::string typ
 			writeIntoparserLogFile(message, 2);
 		} 	
 		 | rl=rel_expression LOGICOP rel_expression {
+			$type = "INT"; // Logic expressions are always of type INT
 			$var_name = $rl.var_name + $LOGICOP->getText() + $rel_expression.var_name;
 			$line_number = $rl.line_number;
 			std::string message = "Line " + std::to_string($rl.line_number) + ": logic_expression : rel_expression LOGICOP rel_expression";
@@ -671,18 +850,32 @@ rel_expression returns [ std::string var_name, int line_number, std::string type
 		| sl1=simple_expression RELOP sl2=simple_expression {
 			$var_name = $sl1.var_name + $RELOP->getText() + $sl2.var_name;
 			$line_number = $sl1.line_number;
+			$type = "INT"; // Relational expressions are always of type INT
 			std::string message = "Line " + std::to_string($sl2.line_number) + ": rel_expression : simple_expression RELOP simple_expression";
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
 		;
 				
-simple_expression returns [std::string var_name, int line_number, std::string type] 
-		: term {
+simple_expression returns [std::string var_name, int line_number, std::string type, std::string err] 
+
+		: term HASH {
+			$var_name = $term.var_name;
+			cout<<"sauce"<<endl;
+			$line_number = $HASH->getLine()+1;
+			std::string message = "Error at line " + std::to_string($HASH->getLine()) + ": " + "Unrecognized character "+ $HASH->getText();
+			message +=( "\n\nLine " + std::to_string($HASH->getLine()+1) + ": simple_expression : term\n\n"+ $term.var_name);
+			std:: string err = "Error at line " + std::to_string($HASH->getLine()) + ": Unrecognized character " + $HASH->getText();
+			writeIntoErrorFile(err);
+			writeIntoparserLogFile(message, 2);
+			$type = "INT"; // Default type for terms
+		}
+		| term {
 			std::string message = "Line " + std::to_string($term.line_number) + ": simple_expression : term";
 			$var_name = $term.var_name;
 			$line_number = $term.line_number;
 			$type = $term.type;
+
 			message += "\n\n" + $term.var_name;
 			writeIntoparserLogFile(message, 2);
 		}
@@ -690,12 +883,17 @@ simple_expression returns [std::string var_name, int line_number, std::string ty
 			std::string message = "Line " + std::to_string($term.line_number) + ": simple_expression : simple_expression ADDOP term";
 			$var_name = $se.var_name + $ADDOP->getText() + $term.var_name;
 			$line_number = $term.line_number;
+			$type = "INT"; // Simple expressions are always of type INT
+			if ($se.type == "FLOAT" || $term.type == "FLOAT" || $se.type == "CONST_FLOAT" || $term.type == "CONST_FLOAT") {
+				$type = "FLOAT";
+			}
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
 		  ;
 
 term returns [std::string var_name, int line_number, std::string type]
+
 	:	unary_expression{
 			std::string message = "Line " + std::to_string($unary_expression.line_number) + ": term : unary_expression";
 			$var_name = $unary_expression.var_name;
@@ -705,6 +903,10 @@ term returns [std::string var_name, int line_number, std::string type]
 			writeIntoparserLogFile(message, 2);
 		} 
      |  tm=term MULOP unary_expression {
+			$type = "INT"; // Term and unary expressions are always of type INT
+			if ($tm.type == "FLOAT" || $unary_expression.type == "FLOAT" || $tm.type == "CONST_FLOAT" || $unary_expression.type == "CONST_FLOAT") {
+				$type = "FLOAT";
+			}
 			// cout<<"mulop unary "<<  $MULOP->getText()<< endl;
 			std::string message = "Line " + std::to_string($unary_expression.line_number) + ": term : term MULOP unary_expression";
 			if ($unary_expression.type == "VOID") {
@@ -734,17 +936,19 @@ term returns [std::string var_name, int line_number, std::string type]
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
-     ;
+		;
 
 unary_expression returns [std::string var_name, int line_number, std::string type]
-		 : ADDOP unary_expression  {
-			std::string message = "Line " + std::to_string($unary_expression.line_number) + ": unary_expression : ADDOP unary_expression";
-			$var_name = $ADDOP->getText() + $unary_expression.var_name;
-			$line_number = $unary_expression.line_number;
+		 : ADDOP ue=unary_expression  {
+			std::string message = "Line " + std::to_string($ue.line_number) + ": unary_expression : ADDOP unary_expression";
+			$var_name = $ADDOP->getText() + $ue.var_name;
+			$line_number = $ue.line_number;
+			$type = $ue.type;
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
 		 | NOT unary_expression  {
+			
 			std::string message = "Line " + std::to_string($unary_expression.line_number) + ": unary_expression : NOT unary_expression";
 			$var_name = $NOT->getText() + $unary_expression.var_name;
 			$line_number = $unary_expression.line_number;
@@ -766,13 +970,14 @@ factor returns [std::string var_name, int line_number, std:: string type]
 			std::string message = "Line " + std::to_string($variable.line_number) + ": factor : variable";
 			message += "\n\n" + $variable.var_name;
 			$var_name = $variable.var_name;
+			$type = $variable.type;	
 			$line_number = $variable.line_number;
 			writeIntoparserLogFile(message, 2);
-		}
+	}
 	| ID LPAREN argument_list RPAREN {
 			std::string message = "Line " + std::to_string($ID->getLine()) + ": factor : ID LPAREN argument_list RPAREN";
 			std::string var_name = $ID->getText() + "(" + $argument_list.name_line + ")";
-
+			
 			symbolInfo* sinfo = getVarType($ID->getText());
 			std::string currentType = sinfo ? sinfo->getType() : "";
 			$type = currentType;
@@ -783,11 +988,39 @@ factor returns [std::string var_name, int line_number, std:: string type]
 				syntaxErrorCount++;
 				currentIndex = "";
 			}
+			else {
+				if (sinfo->getIsFunction()) {
+					std::vector<std::string> paramTypes = sinfo->getParams();
+					// cout<<" size of paramTypes is: " << sinfo->getParamCount() << endl;
+					if (paramTypes.size() != currentArgs.size()) {
+						std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": Total number of arguments mismatch with declaration in function " + $ID->getText();
+						writeIntoErrorFile(errMsg);
+						message += "\n\n" + errMsg;
+						syntaxErrorCount++;
+					}
+					else {
+						for (size_t i = 0; i < paramTypes.size(); ++i) {
+							if (paramTypes[i] != currentArgs[i] && (currentArgs[i].back() != ']' && stopargMismatch == 0)) {
+
+								std::string errMsg = "Error at line " + std::to_string($ID->getLine()) + ": " + std::to_string(i + 1) + "th argument mismatch in function " + $ID->getText();
+								writeIntoErrorFile(errMsg);
+								message += "\n\n" + errMsg;
+								cout << "paramTypes[" << i << "] = " << paramTypes[i] << ", currentArgs[" << i << "] = " << currentArgs[i] << endl;
+								syntaxErrorCount++;
+								break;
+							}
+
+						}
+						$type = sinfo->getType();
+					}
+				}
+			}
 
 			$var_name = $ID->getText() + "(" + $argument_list.name_line + ")";
 			$line_number = $ID->getLine();
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
+			currentArgs.clear();
 		}
 	| LPAREN expression RPAREN {
 			std::string message = "Line " + std::to_string($expression.line_number) + ": factor : LPAREN expression RPAREN";
@@ -800,6 +1033,7 @@ factor returns [std::string var_name, int line_number, std:: string type]
 			std::string message = "Line " + std::to_string($CONST_INT->getLine()) + ": factor : CONST_INT";
 			$var_name = $CONST_INT->getText();
 			$line_number = $CONST_INT->getLine();
+			$type = "INT";
 			currentIndex = "CONST_INT";
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
@@ -809,6 +1043,7 @@ factor returns [std::string var_name, int line_number, std:: string type]
 			$var_name = $CONST_FLOAT->getText();
 			$line_number = $CONST_FLOAT->getLine();
 			message += "\n\n" + $var_name;
+			$type = "FLOAT";
 			currentIndex = "CONST_FLOAT";
 			writeIntoparserLogFile(message, 2);
 		}
@@ -816,6 +1051,7 @@ factor returns [std::string var_name, int line_number, std:: string type]
 			std::string message = "Line " + std::to_string($variable.line_number) + ": factor : variable INCOP";
 			$var_name = $variable.var_name + $INCOP->getText();
 			$line_number = $variable.line_number;
+			$type = $variable.type;
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
@@ -823,6 +1059,7 @@ factor returns [std::string var_name, int line_number, std:: string type]
 			std::string message = "Line " + std::to_string($variable.line_number) + ": factor : variable DECOP";
 			$var_name = $variable.var_name + $DECOP->getText();
 			$line_number = $variable.line_number;
+			$type = $variable.type;
 			message += "\n\n" + $var_name;
 			writeIntoparserLogFile(message, 2);
 		}
@@ -836,15 +1073,22 @@ argument_list returns [std::string name_line, int line_number]
 			message += "\n\n" + $arguments.name_line;
 			writeIntoparserLogFile(message, 2);
 			}
-			  |
+			
 			  ;
 
 arguments returns [std::string name_line, int line_number]
 		: ar=arguments COMMA logic_expression {
+			
 			$name_line = $ar.name_line + "," + $logic_expression.var_name;
 			$line_number = $logic_expression.line_number;
 			std::string message = "Line " + std::to_string($logic_expression.line_number) + ": arguments : arguments COMMA logic_expression";
 			message += "\n\n" + $name_line;
+			cout<<"logic expression is: " << $logic_expression.var_name << endl;
+			cout<<" logic exp type is: " << $logic_expression.type << endl;
+			if ($logic_expression.type != "VOID" || $logic_expression.type != "" ) {
+				currentArgs.insert(currentArgs.begin(), $logic_expression.type);
+			}
+			// cout<< "current args size is: " << currentArgs.size() << endl;
 			writeIntoparserLogFile(message, 2);
 		}
 	      | logic_expression {
@@ -852,6 +1096,13 @@ arguments returns [std::string name_line, int line_number]
 			$line_number = $logic_expression.line_number;
 			std::string message = "Line " + std::to_string($logic_expression.line_number) + ": arguments : logic_expression";
 			message += "\n\n" + $name_line;
+			cout<<"logic expression is: " << $logic_expression.var_name << endl;
+			cout<<" logic exp type is: " << $logic_expression.type << endl;
+			if ($logic_expression.type != "VOID" || $logic_expression.type != "" ) {
+				currentArgs.insert(currentArgs.begin(), $logic_expression.type);
+			}
+			// cout<< "current args size is: " << currentArgs.size() << endl;
 			writeIntoparserLogFile(message, 2);
 		}
 	      ;
+

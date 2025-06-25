@@ -26,7 +26,7 @@ private:
     // string extras ;
     symbolInfo * nextSymbol ;
 public:
-    symbolInfo(string NAME , string TYPE , bool isArray=false, int isFunction=0, vector<string> params={}, symbolInfo* nextSymbol = nullptr){
+    symbolInfo(string NAME , string TYPE , bool isArray, int isFunction, vector<string> params, symbolInfo* nextSymbol = nullptr){
         this->NAME = NAME ;
         this->TYPE = TYPE ;
         this->isArray = isArray;
